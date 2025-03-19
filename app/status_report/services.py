@@ -21,7 +21,7 @@ class StatusReportServices:
 
     async def create_status_report(self, status_report_data: CreateStatusReportScheme, session: AsyncSession):
         status_report_data_dict = status_report_data.model_dump()
-        new_status_report = Dh(**status_report_data_dict)
+        new_status_report = StatusReport(**status_report_data_dict)
         session.add(new_status_report)
         await session.commit()
         return new_status_report

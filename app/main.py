@@ -33,5 +33,5 @@ app = FastAPI(
 
 app.include_router(sample_route, prefix=f"/{version_prefix}/sample", tags=["sample"])
 app.include_router(sample_delivery_route, prefix=f"/{version_prefix}/delivery", tags=["delivery"])
-app.include_router(dh_route, prefix=f"/{version_prefix}/db", tags=["db"])
+app.include_router(dh_route, prefix=f"/{version_prefix}/dh", tags=["dh"])
 app.include_router(status_report_route, prefix=f"/{version_prefix}/status", tags=["status"])

@@ -5,7 +5,7 @@ from app.status_report.services import StatusReportServices
 from app.status_report.schemas import CreateStatusReportScheme
 
 
-status_report_services = StatusReportServices
+status_report_services = StatusReportServices()
 status_report_route = APIRouter()
 
 
