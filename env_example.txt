@@ -1,0 +1,3 @@
+DATABASE_URL= "mysql+aiomysql://user:password@domain:3306/name_db"
+DOMAIN=""
+VERSION="api/v1"
