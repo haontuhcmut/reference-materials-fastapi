@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from app.sample.routes import sample_route
 from app.sample_delivery.routes import sample_delivery_route
 from app.dh.routes import dh_route
+from app.info_sample.routes import info_sample_route
 from app.status_report.routes import status_report_route
 from app.config import Config
+
 
 
 description = """
@@ -35,3 +37,4 @@ app.include_router(sample_route, prefix=f"/{version_prefix}/sample", tags=["samp
 app.include_router(sample_delivery_route, prefix=f"/{version_prefix}/delivery", tags=["delivery"])
 app.include_router(dh_route, prefix=f"/{version_prefix}/dh", tags=["dh"])
 app.include_router(status_report_route, prefix=f"/{version_prefix}/status", tags=["status"])
+app.include_router(info_sample_route, prefix=f"/{version_prefix}/info_sample", tags=["info sample"])

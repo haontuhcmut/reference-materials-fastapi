@@ -5,7 +5,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 class Sample(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    sku: str = Field(default=None, max_length=15, min_length=1, nullable=False, unique=True)
+    sku: str = Field(default=None, max_length=15, min_length=1, nullable=False)
     name: str = Field(default=None, nullable=False)
     description: str = Field(default=None, max_length=1024, nullable=True)
     created_at: date
