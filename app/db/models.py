@@ -10,42 +10,44 @@ class Sample(SQLModel, table=True):
     description: str = Field(default=None, max_length=1024, nullable=True)
     created_at: date
 
-    sample_deliveries: list["SampleDelivery"] = Relationship(back_populates="sample")
+    delivery_plan: list["DeliveryPlan"] = Relationship(back_populates="sample")
     status_reports: list["StatusReport"] = Relationship(back_populates="sample")
     dhs: list["Dh"] = Relationship(back_populates="sample")
 
-class SampleDelivery(SQLModel, table=True):
-    __tablename__ = "sample_delivery"
+class DeliveryPlan(SQLModel, table=True):
+    __tablename__ = "delivery_plan"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     sample_id: uuid.UUID | None = Field(default=None, foreign_key="sample.id")
     created_at: date
     delivery_date: date
     description: str | None = Field(default=None, max_length=1024)
 
-    sample: Sample | None = Relationship(back_populates="sample_deliveries")
-    status_reports: list["StatusReport"] = Relationship(back_populates="sample_delivery")
+    sample: Sample | None = Relationship(back_populates="delivery_plan")
+    status_reports: list["StatusReport"] = Relationship(back_populates="delivery_plan")
 
 
-class Dh(SQLModel, table=True):
+class Delivery(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    code: str = Field(default=None, min_length=1, max_length=15, nullable=False, unique=True)
+    dh_code: str = Field(default=None, min_length=1, max_length=15, nullable=False, unique=True)
     sample_id: uuid.UUID | None = Field(default=None, foreign_key="sample.id")
+    due_date: date
+    created_at: date
 
     sample: Sample | None = Relationship(back_populates="dhs")
-    status_report: Optional["StatusReport"] = Relationship(back_populates="dh")
+    status_report: Optional["StatusReport"] = Relationship(back_populates="delivery")
 
 
 class StatusReport(SQLModel, table=True):
     __tablename__ = "status_report"
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     sample_id: uuid.UUID | None = Field(default=None, foreign_key="sample.id")
-    sample_delivery_id: uuid.UUID | None = Field(default=None, foreign_key="sample_delivery.id")
-    dh_id: uuid.UUID | None = Field(default=None, foreign_key="dh.id")
+    delivery_plan_id: uuid.UUID | None = Field(default=None, foreign_key="delivery_plan.id")
+    dh_id: uuid.UUID | None = Field(default=None, foreign_key="delivery.id")
     status: str = Field(default=None, min_length=1, nullable=False)
     description: str | None = Field(default=None, min_length=1, max_length=1024)
 
     sample: Sample | None = Relationship(back_populates="status_reports")
-    sample_delivery: SampleDelivery | None = Relationship(back_populates="status_reports")
+    delivery_plan: DeliveryPlan | None = Relationship(back_populates="status_reports")
     dh: Dh | None = Relationship(back_populates="status_report")
 
 

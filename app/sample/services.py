@@ -38,8 +38,8 @@ class SampleServices:
             update_data_dict = data_update.model_dump()
             for key, value in update_data_dict.items():
                 setattr(sample_to_update, key, value)
-                await session.commit()
-                return sample_to_update
+            await session.commit()
+            return sample_to_update
         else:
             return None
 

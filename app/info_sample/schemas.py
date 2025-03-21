@@ -2,33 +2,24 @@ from pydantic import BaseModel
 from typing import List, Optional
 from uuid import UUID, uuid4
 from datetime import date, datetime
+from app.sample.schemas import CreateSampleScheme
+from app.delivery_plan.schemas import CreateSampleDelivery
+from app.delivery.schemas import CreateDhScheme
+from app.status_report.schemas import CreateStatusReportScheme
 
-class StatusReportRead(BaseModel):
+
+class ReadDelivery(CreateSampleDelivery):
     id: UUID
-    status: str
-    description: Optional[str]
 
-
-class SampleDeliveryRead(BaseModel):
+class ReadDh(CreateDhScheme):
     id: UUID
-    created_at: datetime
-    delivery_date: date
-    description: Optional[str]
-    status_reports: List[StatusReportRead] = []
 
-
-class DHRead(BaseModel):
+class ReadStatus(CreateStatusReportScheme):
     id: UUID
-    code: str
-    status_reports: List[StatusReportRead] = []
 
-
-class SampleRead(BaseModel):
+class SampleRead(CreateSampleScheme):
     id: UUID
-    sku: str
-    name: str
-    description: Optional[str]
-    created_at: datetime
-    deliveries: List[SampleDeliveryRead] = []
-    dhs: List[DHRead] = []
-    status_reports: List[StatusReportRead] = []
+    deliveries: List[ReadDelivery] | None = None
+    # dhs: List[ReadDh] | None = None
+    # status_reports: List[ReadStatus] | None = None
+
