@@ -7,7 +7,7 @@ from app.delivery.schemas import CreateDeliveryScheme
 
 class DeliveryServices:
     async def get_delivery(self, session: AsyncSession):
-        statement = select(Delivery).order_by(desc(Delivery.code))
+        statement = select(Delivery).order_by(desc(Delivery.delivery_code))
         results = await session.exec(statement)
         delivery = results.all()
         return delivery

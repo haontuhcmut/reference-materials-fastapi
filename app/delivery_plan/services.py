@@ -27,7 +27,7 @@ class DeliveryPlanServices:
         return new_delivery
 
     async def update_delivery_plan(self, delivery_id: str, data_update: CreateDeliveryPlanScheme, session: AsyncSession):
-        delivery_to_update = await self.get_delivery_item(delivery_id, session)
+        delivery_to_update = await self.get_delivery_plan_item(delivery_id, session)
         if delivery_to_update is not None:
             update_data_dict = data_update.model_dump()
             for key, value in update_data_dict.items():
