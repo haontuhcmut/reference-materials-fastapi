@@ -3,15 +3,15 @@ from typing import List, Optional
 from uuid import UUID, uuid4
 from datetime import date, datetime
 from app.sample.schemas import CreateSampleScheme
-from app.delivery_plan.schemas import CreateSampleDelivery
-from app.delivery.schemas import CreateDhScheme
+from app.delivery_plan.schemas import CreateDeliveryPlanScheme
+from app.delivery.schemas import CreateDeliveryScheme
 from app.status_report.schemas import CreateStatusReportScheme
 
 
-class ReadDelivery(CreateSampleDelivery):
+class ReadDelivery(CreateDeliveryPlanScheme):
     id: UUID
 
-class ReadDh(CreateDhScheme):
+class ReadDh(CreateDeliveryScheme):
     id: UUID
 
 class ReadStatus(CreateStatusReportScheme):

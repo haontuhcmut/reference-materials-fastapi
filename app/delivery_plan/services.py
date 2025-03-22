@@ -3,7 +3,7 @@ import uuid
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.db.models import DeliveryPlan
 from sqlmodel import desc, select
-from app.delivery_plan.schemas import CreateDeliveryPlan
+from app.delivery_plan.schemas import CreateDeliveryPlanScheme
 
 class DeliveryPlanServices:
     async def get_delivery_plan(self, session: AsyncSession):
@@ -19,14 +19,14 @@ class DeliveryPlanServices:
         delivery_plan = result.first()
         return delivery_plan
 
-    async def create_delivery_plan(self, delivery_data: CreateDeliveryPlan, session: AsyncSession):
+    async def create_delivery_plan(self, delivery_data: CreateDeliveryPlanScheme, session: AsyncSession):
         delivery_data_dict = delivery_data.model_dump()
         new_delivery = DeliveryPlan(**delivery_data_dict)
         session.add(new_delivery)
         await session.commit()
         return new_delivery
 
-    async def update_delivery_plan(self, delivery_id: str, data_update: CreateDeliveryPlan, session: AsyncSession):
+    async def update_delivery_plan(self, delivery_id: str, data_update: CreateDeliveryPlanScheme, session: AsyncSession):
         delivery_to_update = await self.get_delivery_item(delivery_id, session)
         if delivery_to_update is not None:
             update_data_dict = data_update.model_dump()

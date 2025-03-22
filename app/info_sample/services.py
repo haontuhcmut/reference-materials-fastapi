@@ -1,7 +1,7 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
-from app.db.models import Sample, DeliveryPlan, Dh, StatusReport
+from app.db.models import Sample, DeliveryPlan, Delivery, StatusReport
 
 class InfoSampleServices:
     async def get_info_samples(self, session: AsyncSession):

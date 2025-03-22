@@ -12,7 +12,7 @@ class Sample(SQLModel, table=True):
 
     delivery_plan: list["DeliveryPlan"] = Relationship(back_populates="sample")
     status_reports: list["StatusReport"] = Relationship(back_populates="sample")
-    dhs: list["Dh"] = Relationship(back_populates="sample")
+    delivery: list["Delivery"] = Relationship(back_populates="sample")
 
 class DeliveryPlan(SQLModel, table=True):
     __tablename__ = "delivery_plan"
@@ -28,12 +28,12 @@ class DeliveryPlan(SQLModel, table=True):
 
 class Delivery(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    dh_code: str = Field(default=None, min_length=1, max_length=15, nullable=False, unique=True)
+    delivery_code: str = Field(default=None, min_length=1, max_length=15, nullable=False, unique=True)
     sample_id: uuid.UUID | None = Field(default=None, foreign_key="sample.id")
     due_date: date
     created_at: date
 
-    sample: Sample | None = Relationship(back_populates="dhs")
+    sample: Sample | None = Relationship(back_populates="delivery")
     status_report: Optional["StatusReport"] = Relationship(back_populates="delivery")
 
 
@@ -42,13 +42,13 @@ class StatusReport(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     sample_id: uuid.UUID | None = Field(default=None, foreign_key="sample.id")
     delivery_plan_id: uuid.UUID | None = Field(default=None, foreign_key="delivery_plan.id")
-    dh_id: uuid.UUID | None = Field(default=None, foreign_key="delivery.id")
+    delivery_id: uuid.UUID | None = Field(default=None, foreign_key="delivery.id")
     status: str = Field(default=None, min_length=1, nullable=False)
     description: str | None = Field(default=None, min_length=1, max_length=1024)
 
     sample: Sample | None = Relationship(back_populates="status_reports")
     delivery_plan: DeliveryPlan | None = Relationship(back_populates="status_reports")
-    dh: Dh | None = Relationship(back_populates="status_report")
+    delivery: Delivery | None = Relationship(back_populates="status_report")
 
 
 

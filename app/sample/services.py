@@ -22,7 +22,7 @@ class SampleServices:
     async def get_sample_sku(self, sample_sku: str, session: AsyncSession):
         statement = select(Sample).where(Sample.sku == sample_sku)
         result = await session.exec(statement)
-        sample = result.first()
+        sample = result.all()
         return sample
 
     async def create_sample(self, sample_data: CreateSampleScheme, session: AsyncSession):

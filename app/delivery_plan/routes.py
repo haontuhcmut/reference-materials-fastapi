@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.db.models import DeliveryPlan
 from app.db.dependencies import SessionDep
 from app.delivery_plan.services import DeliveryPlanServices
-from app.delivery_plan.schemas import CreateDeliveryPlan
+from app.delivery_plan.schemas import CreateDeliveryPlanScheme
 
 
 delivery_services = DeliveryPlanServices()
@@ -21,12 +21,12 @@ async def get_delivery_plan_item(delivery_plan_item: str, session:SessionDep):
     return delivery_plan
 
 @delivery_plan_route.post("/", response_model=DeliveryPlan)
-async def create_delivery_plan(delivery_plan_data: CreateDeliveryPlan, session: SessionDep) -> dict:
+async def create_delivery_plan(delivery_plan_data: CreateDeliveryPlanScheme, session: SessionDep) -> dict:
     new_delivery_plan = await delivery_services.create_delivery_plan(delivery_plan_data, session)
     return new_delivery_plan
 
 @delivery_plan_route.put("/{delivery_plan_item}", response_model=DeliveryPlan)
-async def update_delivery_plan(delivery_plan_item: str, data_update: CreateDeliveryPlan, session: SessionDep):
+async def update_delivery_plan(delivery_plan_item: str, data_update: CreateDeliveryPlanScheme, session: SessionDep):
     updated_delivery = await delivery_services.update_delivery_plan(delivery_plan_item, data_update, session)
     if updated_delivery is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Delivery plan not found")

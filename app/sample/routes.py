@@ -20,7 +20,7 @@ async def get_sample_item(sample_item: str, session:SessionDep):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found")
     return sample
 
-@sample_route.get("/get_name/{sample_name}", response_model=Sample)
+@sample_route.get("/get_name/{sample_name}", response_model=list[Sample])
 async def get_sample_sku(sample_sku: str, session: SessionDep):
     sample = await sample_service.get_sample_sku(sample_sku, session)
     if sample is None:

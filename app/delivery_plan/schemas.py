@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field
 from datetime import date
 import uuid
 
-class CreateDeliveryPlan(BaseModel):
+class CreateDeliveryPlanScheme(BaseModel):
     sample_id: uuid.UUID | None = Field(default=None)
     created_at: date
     delivery_date: date

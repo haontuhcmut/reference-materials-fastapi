@@ -25,15 +25,15 @@ async def create_delivery(delivery_data: CreateDeliveryScheme, session: SessionD
     new_delivery = await delivery_services.create_delivery(delivery_data, session)
     return new_delivery
 
-@delivery_route.put("/{delivery_item}", response_model=Dh)
+@delivery_route.put("/{delivery_item}", response_model=Delivery)
 async def update_delivery(delivery_item: str, data_update: CreateDeliveryScheme, session: SessionDep):
-    updated_delivery = await delivery_services.update_delivery(dh_item, data_update, session)
+    updated_delivery = await delivery_services.update_delivery(delivery_item, data_update, session)
     if updated_delivery is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Delivery not found")
     else:
         return updated_delivery
 
-@delivery_route.delete("/{delivery_item}", response_model=Dh)
+@delivery_route.delete("/{delivery_item}", response_model=Delivery)
 async def delete_delivery(delivery_item: str, session: SessionDep):
     delivery_to_deleted = await delivery_services.delete_delivery(delivery_item, session)
     if delivery_to_deleted is None:
