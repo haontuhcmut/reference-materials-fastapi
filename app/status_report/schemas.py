@@ -9,8 +9,6 @@ class StatusEnum(str, Enum):
     finished = "finished"
 
 class CreateStatusReportScheme(BaseModel):
-    sample_id: uuid.UUID | None = Field(default=None)
-    sample_delivery_id: uuid.UUID | None = Field(default=None)
-    dh_id: uuid.UUID | None = Field(default=None)
+    delivery_id: uuid.UUID | None = Field(default=None)
     status: StatusEnum = Field(default="pending")
     description: str | None = Field(default=None, min_length=1, max_length=1024)

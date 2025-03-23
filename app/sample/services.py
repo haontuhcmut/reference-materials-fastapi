@@ -3,7 +3,7 @@ import uuid
 from sqlmodel.ext.asyncio.session import AsyncSession
 from app.db.models import Sample
 from sqlmodel import desc, select
-from app.sample.schemas import CreateSampleScheme
+from app.sample.schemas import CreateSampleSchema
 
 class SampleServices:
     async def get_samples(self, session: AsyncSession):
@@ -25,14 +25,14 @@ class SampleServices:
         sample = result.all()
         return sample
 
-    async def create_sample(self, sample_data: CreateSampleScheme, session: AsyncSession):
+    async def create_sample(self, sample_data: CreateSampleSchema, session: AsyncSession):
         sample_data_dict = sample_data.model_dump()
         new_sample = Sample(**sample_data_dict)
         session.add(new_sample)
         await session.commit()
         return new_sample
 
-    async def update_sample(self, sample_id: str, data_update: CreateSampleScheme, session: AsyncSession):
+    async def update_sample(self, sample_id: str, data_update: CreateSampleSchema, session: AsyncSession):
         sample_to_update = await self.get_sample_item(sample_id, session)
         if sample_to_update is not None:
             update_data_dict = data_update.model_dump()

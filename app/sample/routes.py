@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, status
 from app.db.models import Sample
 from app.db.dependencies import SessionDep
 from app.sample.services import SampleServices
-from app.sample.schemas import CreateSampleScheme
+from app.sample.schemas import CreateSampleSchema
 
 
 sample_service = SampleServices()
@@ -28,12 +28,12 @@ async def get_sample_sku(sample_sku: str, session: SessionDep):
     return sample
 
 @sample_route.post("/", response_model=Sample)
-async def create_sample(sample_data: CreateSampleScheme, session: SessionDep) -> dict:
+async def create_sample(sample_data: CreateSampleSchema, session: SessionDep) -> dict:
     new_sample = await sample_service.create_sample(sample_data, session)
     return new_sample
 
 @sample_route.put("/{sample_item}", response_model=Sample)
-async def update_sample(sample_item: str, data_update: CreateSampleScheme, session: SessionDep):
+async def update_sample(sample_item: str, data_update: CreateSampleSchema, session: SessionDep):
     updated_sample = await sample_service.update_sample(sample_item, data_update, session)
     if updated_sample is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sample not found")
