@@ -8,18 +8,20 @@ from app.delivery_plan.schemas import CreateDeliveryPlanSchema, DeliveryPlanSamp
 delivery_plan_services = DeliveryPlanServices()
 delivery_plan_route = APIRouter()
 
-@delivery_plan_route.get("/")
+@delivery_plan_route.get("/", response_model=list[DeliveryPlanSampleSchema])
 async def get_delivery_plan(session: SessionDep):
     delivery_plan = await delivery_plan_services.get_delivery_plan(session)
     return delivery_plan
 
-@delivery_plan_route.get("/today", response_model=list[DeliveryPlan])
+@delivery_plan_route.get("/today", response_model=list[DeliveryPlanSampleSchema])
 async def get_plan_today(session: SessionDep):
     delivery_plan_today = await delivery_plan_services.get_delivery_plan_today(session)
+    if not delivery_plan_today:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Today, not found any plan")
     return delivery_plan_today
 
-@delivery_plan_route.get("/{delivery_plan_item}", response_model=list[DeliveryPlan])
-async def get_delivery_plan_item(delivery_plan_item: str, session:SessionDep):
+@delivery_plan_route.get("/{delivery_plan_item}", response_model=list[DeliveryPlanSampleSchema])
+async def get_delivery_plan_item(delivery_plan_item: str, session: SessionDep):
     delivery_plan = await delivery_plan_services.get_delivery_plan_item(delivery_plan_item, session)
     if delivery_plan is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Delivery plan not found")

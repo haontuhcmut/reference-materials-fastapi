@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
-from datetime import date, datetime
+from datetime import date
 from app.sample.schemas import CreateSampleSchema
 import uuid
+
 
 class CreateDeliveryPlanSchema(BaseModel):
     sample_id: uuid.UUID | None = Field(default=None)
@@ -17,4 +18,3 @@ class DeliveryPlanResponseSchema(CreateDeliveryPlanSchema):
 class DeliveryPlanSampleSchema(DeliveryPlanResponseSchema, CreateSampleSchema):
     method: str | None = Field(default=None)
     pass
-
