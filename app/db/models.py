@@ -1,51 +1,59 @@
-import uuid
-from datetime import date
+from uuid import UUID, uuid4
+from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship
+class Category(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    name: str = Field(default=None, max_length=128)
 
-class Sample(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    sku: str = Field(default=None, max_length=15, min_length=1, nullable=False)
-    name: str = Field(default=None, nullable=False)
-    method: str = Field(default=None, max_length=1024, nullable=True)
-    created_at: date
+    pt_schemes: list["PTScheme"] = Relationship(back_populates="category")
+class PTScheme(SQLModel, table=True):
+    __tablename__ = "pt_scheme"
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    category_id: UUID | None = Field(default=None, foreign_key="category.id")
+    name: str = Field(default=None, max_length=128)
+    year: int | None = Field(default=None, ge=1900, le=2100)
+    analytes: str | None = Field(default=None, max_length=128)
 
-    delivery_plan: list["DeliveryPlan"] = Relationship(back_populates="sample")
+    category: Category | None = Relationship(back_populates="pt_schemes")
+    products: list["Product"] = Relationship(back_populates="pt_scheme")
 
-class DeliveryPlan(SQLModel, table=True):
-    __tablename__ = "delivery_plan"
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    sample_id: uuid.UUID | None = Field(default=None, foreign_key="sample.id")
-    created_at: date
-    condition: str | None = Field(default=None, max_length=1024)
-    delivery_date: date
+class Product(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    item_type_id: UUID | None = Field(default=None, foreign_key="item_type.id")
+    pt_scheme_id: UUID | None = Field(default=None, foreign_key="pt_scheme.id")
+    sku: str = Field(default=None, max_length=128, unique=True)
+    quantity: int = Field(default=0, nullable=False, ge=0, le=999)
+    unit: str | None = Field(default=None, max_length=16)
+    status: str | None = Field(default=None, max_length=16)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    sample: Sample | None = Relationship(back_populates="delivery_plan")
-    delivery: Optional["Delivery"] = Relationship(back_populates="delivery_plan")
+    item_type: Optional["ItemType"] = Relationship(back_populates="products")
+    pt_scheme: PTScheme | None = Relationship(back_populates="products")
+    bill_of_materials: list["BillOfMaterial"] = Relationship(back_populates="product")
 
+class BillOfMaterial(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    product_id: UUID | None = Field(default=None, foreign_key="product.id")
+    material_id: UUID | None = Field(default=None, foreign_key="material.id")
+    quantity_required: int | None = Field(default=0, ge=0, le=999)
 
-class Delivery(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    delivery_plan_id: uuid.UUID | None = Field(default=None, foreign_key="delivery_plan.id")
-    delivery_code: str = Field(default=None, min_length=1, max_length=15, nullable=False, unique=True)
-    due_date: date
-    created_at: date
+    product: Optional[Product] = Relationship(back_populates="bill_of_materials")
+    material: Optional["Material"] = Relationship(back_populates="bill_of_materials")
+class Material(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    item_id: UUID | None = Field(default=None, foreign_key="item_type.id")
+    internal_code: str = Field(default=None, nullable=False, unique=True)
+    #name: str = Field(default=None)
 
-    delivery_plan: DeliveryPlan | None = Relationship(back_populates="delivery")
-    status_report: Optional["StatusReport"] = Relationship(back_populates="delivery")
-
-
-class StatusReport(SQLModel, table=True):
-    __tablename__ = "status_report"
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    delivery_id: uuid.UUID | None = Field(default=None, foreign_key="delivery.id")
-    status: str = Field(default=None, min_length=1, nullable=False)
-    description: str | None = Field(default=None, min_length=1, max_length=1024)
-
-    delivery: Delivery | None = Relationship(back_populates="status_report")
-
-
-
-
+    bill_of_materials: list[BillOfMaterial] = Relationship(back_populates="material")
+    item_type: Optional["ItemType"] = Relationship(back_populates="materials")
 
 
+class ItemType(SQLModel, table=True):
+    __tablename__ = "item_type"
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    type_name: str = Field(default=None, max_length=128)
+
+    products: list[Product] = Relationship(back_populates="item_type")
+    materials: list[Material] = Relationship(back_populates="item_type")
