@@ -2,21 +2,26 @@ from uuid import UUID, uuid4
 from datetime import datetime, timezone
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship
+
+
 class Category(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    name: str = Field(default=None, max_length=128)
+    name: str = Field(default=None, max_length=128, nullable=False)
 
     pt_schemes: list["PTScheme"] = Relationship(back_populates="category")
+
+
 class PTScheme(SQLModel, table=True):
     __tablename__ = "pt_scheme"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     category_id: UUID | None = Field(default=None, foreign_key="category.id")
-    name: str = Field(default=None, max_length=128)
+    name: str = Field(default=None, max_length=128, nullable=False)
     year: int | None = Field(default=None, ge=1900, le=2100)
     analytes: str | None = Field(default=None, max_length=128)
 
     category: Category | None = Relationship(back_populates="pt_schemes")
     products: list["Product"] = Relationship(back_populates="pt_scheme")
+
 
 class Product(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
@@ -32,6 +37,7 @@ class Product(SQLModel, table=True):
     pt_scheme: PTScheme | None = Relationship(back_populates="products")
     bill_of_materials: list["BillOfMaterial"] = Relationship(back_populates="product")
 
+
 class BillOfMaterial(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     product_id: UUID | None = Field(default=None, foreign_key="product.id")
@@ -40,11 +46,17 @@ class BillOfMaterial(SQLModel, table=True):
 
     product: Optional[Product] = Relationship(back_populates="bill_of_materials")
     material: Optional["Material"] = Relationship(back_populates="bill_of_materials")
+
+
 class Material(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     item_id: UUID | None = Field(default=None, foreign_key="item_type.id")
     internal_code: str = Field(default=None, nullable=False, unique=True)
-    #name: str = Field(default=None)
+    name: str = Field(default=None, max_length=128, nullable=False)
+    quantity: float = Field(default=0)
+    unit: str | None = Field(default=None, max_length=32)
+    detailed_info: str | None = Field(default=None, max_length=1028)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     bill_of_materials: list[BillOfMaterial] = Relationship(back_populates="material")
     item_type: Optional["ItemType"] = Relationship(back_populates="materials")
@@ -57,3 +69,32 @@ class ItemType(SQLModel, table=True):
 
     products: list[Product] = Relationship(back_populates="item_type")
     materials: list[Material] = Relationship(back_populates="item_type")
+    import_stock: Optional["ImportStock"] = Relationship(back_populates="item_types")
+    export_stock: Optional["ExportStock"] = Relationship(back_populates="item_types")
+
+class ImportStock(SQLModel, table=True):
+    __tablename__ = "import_stock"
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    warehouse_id: UUID | None = Field(default=None, foreign_key="warehouse.id")
+    item_type_id: UUID | None = Field(default=None, foreign_key="item_type.id")
+    created_at: datetime = Field(default_factory=lambda : datetime.now(timezone.utc))
+
+    warehouse: Optional["Warehouse"] = Relationship(back_populates="import_stocks")
+    item_types: list[ItemType] = Relationship(back_populates="import_stock")
+
+class Warehouse(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    name: str = Field(default=None, max_length=128, nullable=False)
+    location: str = Field(default=None, max_length=128, nullable=False)
+    type: str = Field(default=None, max_length=32)
+
+    import_stocks: list[ImportStock] = Relationship(back_populates="warehouse")
+    export_stocks: list["ExportStock"] = Relationship(back_populates="warehouse")
+
+class ExportStock(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    warehouse_id: UUID | None = Field(default=None, foreign_key="warehouse.id")
+    item_type_id: UUID | None = Field(default=None, foreign_key="item_type.id")
+
+    warehouse: Warehouse | None = Relationship(back_populates="export_stocks")
+    item_types: ItemType | None = Relationship(back_populates="export_stock")
