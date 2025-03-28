@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
-from app.db.models import DeliveryPlan
-from app.db.dependencies import SessionDep
+from app.db.model import DeliveryPlan
+from app.db.dependency import SessionDep
 from app.delivery_plan.services import DeliveryPlanServices
 from app.delivery_plan.schemas import CreateDeliveryPlanSchema, DeliveryPlanSampleSchema
 

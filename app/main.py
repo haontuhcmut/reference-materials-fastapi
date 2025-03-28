@@ -1,24 +1,22 @@
 from fastapi import FastAPI
-from app.sample.routes import sample_route
-from app.delivery_plan.routes import delivery_plan_route
-from app.delivery.routes import delivery_route
-#from app.info_sample.routes import info_sample_route
-from app.status_report.routes import status_report_route
+from app.error import register_all_errors
 from app.config import Config
+
+from app.category.route import category_route
 
 
 
 description = """
-A REST API for a Raw Material Sample web service.
+A REST API for a Laboratory Information Management Systems web service.
 
 This REST API is able to:
-- Create CRUD sample,...
+- Create CRUD,...
 """
 
 version_prefix = Config.VERSION
 
 app = FastAPI(
-    title="Sample Management",
+    title="Laboratory Information Management Systems",
     description=description,
     version=version_prefix,
     license_info={"name": "MIT License", "url": "https://opensource.org/license/mit"},
@@ -32,9 +30,7 @@ app = FastAPI(
     redoc_url=f"/{version_prefix}/redoc",
 )
 
+register_all_errors(app)
 
-app.include_router(sample_route, prefix=f"/{version_prefix}/sample", tags=["sample"])
-app.include_router(delivery_plan_route, prefix=f"/{version_prefix}/delivery_plan", tags=["delivery plan"])
-app.include_router(delivery_route, prefix=f"/{version_prefix}/delivery", tags=["delivery"])
-app.include_router(status_report_route, prefix=f"/{version_prefix}/status", tags=["status"])
-#app.include_router(info_sample_route, prefix=f"/{version_prefix}/info_sample", tags=["info sample"])
+app.include_router(category_route, prefix=f"/{version_prefix}/category", tags=["category"])
+

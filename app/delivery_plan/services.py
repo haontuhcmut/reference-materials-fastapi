@@ -1,7 +1,7 @@
 import uuid
 
 from sqlmodel.ext.asyncio.session import AsyncSession
-from app.db.models import DeliveryPlan, Sample
+from app.db.model import DeliveryPlan, Sample
 from sqlmodel import desc, select, asc
 
 from app.delivery_plan.schemas import CreateDeliveryPlanSchema, DeliveryPlanSampleSchema
