@@ -29,12 +29,15 @@ class CategoryService:
         await session.commit()
         return new_category
 
-    async def update_category(self, category_id: str, data: CreateCategoryModel, session: AsyncSession):
+    async def update_category(self, category_id: str, data_update: CreateCategoryModel, session: AsyncSession):
         category_to_update = await self.get_category_item(category_id, session)
+
         if category_to_update is not None:
             data_dict = category_to_update.model_dump()
-            for key, value in data_dict.items():
-                setattr(Category, key, value)
+
+            for key, value in data_update.items():
+                setattr(category_to_update, key, value)
+
             await session.commit()
             return category_to_update
         else:
