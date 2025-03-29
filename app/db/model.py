@@ -26,6 +26,7 @@ class Product(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     item_type_id: UUID | None = Field(default=None, foreign_key="item_type.id")
     pt_scheme_id: UUID | None = Field(default=None, foreign_key="pt_scheme.id")
+    name: str = Field(default=None, max_length=128)
     sku: str = Field(default=None, max_length=128, unique=True)
     quantity: int = Field(default=0, nullable=False, ge=0, le=999)
     unit: str | None = Field(default=None, max_length=16)

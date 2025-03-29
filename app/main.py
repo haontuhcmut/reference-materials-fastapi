@@ -4,6 +4,7 @@ from app.config import Config
 
 from app.category.route import category_route
 from app.pt_scheme.route import pt_scheme_route
+from app.product.route import product_route
 
 
 
@@ -35,3 +36,5 @@ register_all_errors(app)
 
 app.include_router(category_route, prefix=f"/{version_prefix}/category", tags=["category"])
 app.include_router(pt_scheme_route, prefix=f"/{version_prefix}/pt_scheme", tags=["pt_scheme"])
+app.include_router(product_route, prefix=f"/{version_prefix}/product", tags=["product"])
+

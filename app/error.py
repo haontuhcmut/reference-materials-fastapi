@@ -20,6 +20,12 @@ class PTSChemeNotFound(ExceptionRegister):
 
     pass
 
+class ProductNotFound(ExceptionRegister):
+    """Product not found"""
+
+    pass
+
+
 def create_exception_handler(
     status_code: int, detail: Any
 ) -> Callable[[Request, Exception], JSONResponse]:
@@ -48,6 +54,17 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "PT scheme not found",
                 "error_code": "pt_scheme_not_found"
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        ProductNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Product not found",
+                "error_code": "product_not_found"
             },
         ),
     )
