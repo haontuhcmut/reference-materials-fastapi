@@ -15,6 +15,10 @@ class CategoryNotFound(ExceptionRegister):
 
     pass
 
+class PTSChemeNotFound(ExceptionRegister):
+    """PT scheme not found"""
+
+    pass
 
 def create_exception_handler(
     status_code: int, detail: Any
@@ -33,6 +37,17 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "Category not found",
                 "error_code": "category_not_found",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        PTSChemeNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "PT scheme not found",
+                "error_code": "pt_scheme_not_found"
             },
         ),
     )

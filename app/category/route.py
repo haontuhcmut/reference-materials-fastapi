@@ -33,15 +33,10 @@ async def create_category(category_data: CreateCategoryModel, session: SessionDe
 
 
 @category_route.put("/{category_id}", response_model=CategoryModel)
-async def update_category(
-    category_id: str, data_update: CreateCategoryModel, session: SessionDep
-):
-    updated_category = await category_service.update_category(
-        category_id, data_update, session
-    )
+async def update_category(category_id: str, data_update: CreateCategoryModel, session: SessionDep):
+    updated_category = await category_service.update_category(category_id, data_update, session)
     if updated_category is None:
         raise CategoryNotFound()
-
     return updated_category
 
 

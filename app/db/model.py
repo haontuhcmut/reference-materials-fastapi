@@ -6,7 +6,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 class Category(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    name: str = Field(default=None, max_length=128, nullable=False)
+    name: str = Field(default=None, max_length=128, nullable=False, unique=True)
 
     pt_schemes: list["PTScheme"] = Relationship(back_populates="category")
 

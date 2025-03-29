@@ -3,6 +3,7 @@ from app.error import register_all_errors
 from app.config import Config
 
 from app.category.route import category_route
+from app.pt_scheme.route import pt_scheme_route
 
 
 
@@ -33,4 +34,4 @@ app = FastAPI(
 register_all_errors(app)
 
 app.include_router(category_route, prefix=f"/{version_prefix}/category", tags=["category"])
-
+app.include_router(pt_scheme_route, prefix=f"/{version_prefix}/pt_scheme", tags=["pt_scheme"])

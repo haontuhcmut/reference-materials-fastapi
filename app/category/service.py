@@ -33,9 +33,9 @@ class CategoryService:
         category_to_update = await self.get_category_item(category_id, session)
 
         if category_to_update is not None:
-            data_dict = category_to_update.model_dump()
+            data_dict = data_update.model_dump()
 
-            for key, value in data_update.items():
+            for key, value in data_dict.items():
                 setattr(category_to_update, key, value)
 
             await session.commit()
@@ -43,7 +43,7 @@ class CategoryService:
         else:
             return None
 
-    async def delete_category(self, category_id: str, data: Category, session: AsyncSession):
+    async def delete_category(self, category_id: str, session: AsyncSession):
         category_to_delete = await self.get_category_item(category_id, session)
         if category_to_delete is not None:
             await session.delete(category_to_delete)
