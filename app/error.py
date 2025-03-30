@@ -25,6 +25,31 @@ class ProductNotFound(ExceptionRegister):
 
     pass
 
+class BomNotFound(ExceptionRegister):
+    """Bill of material not found"""
+
+    pass
+
+class MaterialNotFound(ExceptionRegister):
+    """Material not found"""
+
+    pass
+
+class ItemTypeNotFound(ExceptionRegister):
+    """Item type not found"""
+
+    pass
+
+class ImportStockNotFound(ExceptionRegister):
+    """Import stock not found"""
+
+    pass
+
+class WarehouseNotFound(ExceptionRegister):
+    """Warehouse not found"""
+
+    pass
+
 
 def create_exception_handler(
     status_code: int, detail: Any
@@ -65,6 +90,61 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "Product not found",
                 "error_code": "product_not_found"
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        BomNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Bill of material not found",
+                "error_code": "bom_not_found"
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        MaterialNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Material not found",
+                "error_code": "material_not_found"
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        ItemTypeNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Item type not found",
+                "error_code": "item_type_not_found"
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        ImportStockNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Import stock item not found",
+                "error_code": "import_stock_not_found"
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        WarehouseNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Warehouse not found",
+                "error_code": "warehouse_not_found"
             },
         ),
     )

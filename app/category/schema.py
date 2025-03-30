@@ -1,4 +1,3 @@
-from enum import unique
 from uuid import UUID
 
 from pydantic import BaseModel, Field

@@ -52,7 +52,7 @@ class BillOfMaterial(SQLModel, table=True):
 class Material(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     item_id: UUID | None = Field(default=None, foreign_key="item_type.id")
-    internal_code: str = Field(default=None, nullable=False, unique=True)
+    internal_code: str = Field(default=None, max_length=32, nullable=False, unique=True)
     name: str = Field(default=None, max_length=128, nullable=False)
     quantity: float = Field(default=0, ge=0, le=99999)
     unit: str | None = Field(default=None, max_length=16)

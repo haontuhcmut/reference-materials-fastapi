@@ -11,7 +11,6 @@ class CreateProductModel(BaseModel):
     quantity: int = Field(default=0, ge=0, le=999)
     unit: str | None = Field(default=None, max_length=16)
     status: str | None = Field(default=None, max_length=16)
-    created_at: datetime
 
 class ProductModel(CreateProductModel):
     id: UUID
