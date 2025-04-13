@@ -15,25 +15,30 @@ class CategoryNotFound(ExceptionRegister):
 
     pass
 
+
 class PTSChemeNotFound(ExceptionRegister):
     """PT scheme not found"""
 
     pass
+
 
 class ProductNotFound(ExceptionRegister):
     """Product not found"""
 
     pass
 
+
 class BomNotFound(ExceptionRegister):
     """Bill of material not found"""
 
     pass
 
+
 class MaterialNotFound(ExceptionRegister):
     """Material not found"""
 
     pass
+
 
 class ItemTypeNotFound(ExceptionRegister):
     """Item type not found"""
@@ -46,10 +51,18 @@ class WarehouseNotFound(ExceptionRegister):
 
     pass
 
+
 class TransactionNotFound(ExceptionRegister):
     """Transaction not found"""
 
     pass
+
+
+class WarehouseItemTypeNotFound(ExceptionRegister):
+    """Warehouse or Item type not found"""
+
+    pass
+
 
 
 def create_exception_handler(
@@ -79,7 +92,7 @@ def register_all_errors(app: FastAPI):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "message": "PT scheme not found",
-                "error_code": "pt_scheme_not_found"
+                "error_code": "pt_scheme_not_found",
             },
         ),
     )
@@ -88,10 +101,7 @@ def register_all_errors(app: FastAPI):
         ProductNotFound,
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "message": "Product not found",
-                "error_code": "product_not_found"
-            },
+            detail={"message": "Product not found", "error_code": "product_not_found"},
         ),
     )
 
@@ -101,7 +111,7 @@ def register_all_errors(app: FastAPI):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "message": "Bill of material not found",
-                "error_code": "bom_not_found"
+                "error_code": "bom_not_found",
             },
         ),
     )
@@ -112,7 +122,7 @@ def register_all_errors(app: FastAPI):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "message": "Material not found",
-                "error_code": "material_not_found"
+                "error_code": "material_not_found",
             },
         ),
     )
@@ -123,11 +133,10 @@ def register_all_errors(app: FastAPI):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "message": "Item type not found",
-                "error_code": "item_type_not_found"
+                "error_code": "item_type_not_found",
             },
         ),
     )
-
 
     app.add_exception_handler(
         WarehouseNotFound,
@@ -135,11 +144,10 @@ def register_all_errors(app: FastAPI):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "message": "Warehouse not found",
-                "error_code": "warehouse_not_found"
+                "error_code": "warehouse_not_found",
             },
         ),
     )
-
 
     app.add_exception_handler(
         TransactionNotFound,
@@ -147,7 +155,20 @@ def register_all_errors(app: FastAPI):
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
                 "message": "Transaction not found",
-                "error_code": "transaction_not_found"
+                "error_code": "transaction_not_found",
             },
         ),
     )
+
+    app.add_exception_handler(
+        WarehouseItemTypeNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Warehouse or Item type not found",
+                "error_code": "warehouse_or_item_type_not_found",
+            },
+        ),
+    )
+
+

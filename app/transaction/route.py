@@ -21,7 +21,7 @@ async def get_transaction_item(transaction_id: str, session: SessionDep):
         raise TransactionNotFound()
     return transaction_item
 
-@transaction_route.post("/", response_model=TransactionModel)
+@transaction_route.post("/stock_in", response_model=TransactionModel)
 async def create_transaction(transaction_data: CreateTransactionsModel, session: SessionDep):
     new_transaction = await transaction_service.create_transaction_data(transaction_data, session)
     return new_transaction
