@@ -40,13 +40,14 @@ class ItemTypeNotFound(ExceptionRegister):
 
     pass
 
-class ImportStockNotFound(ExceptionRegister):
-    """Import stock not found"""
-
-    pass
 
 class WarehouseNotFound(ExceptionRegister):
     """Warehouse not found"""
+
+    pass
+
+class TransactionNotFound(ExceptionRegister):
+    """Transaction not found"""
 
     pass
 
@@ -127,16 +128,6 @@ def register_all_errors(app: FastAPI):
         ),
     )
 
-    app.add_exception_handler(
-        ImportStockNotFound,
-        create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "message": "Import stock item not found",
-                "error_code": "import_stock_not_found"
-            },
-        ),
-    )
 
     app.add_exception_handler(
         WarehouseNotFound,
@@ -145,6 +136,18 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "Warehouse not found",
                 "error_code": "warehouse_not_found"
+            },
+        ),
+    )
+
+
+    app.add_exception_handler(
+        TransactionNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Transaction not found",
+                "error_code": "transaction_not_found"
             },
         ),
     )

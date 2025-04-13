@@ -8,8 +8,8 @@ from app.product.route import product_route
 from app.bom.route import bom_route
 from app.material.route import material_route
 from app.item_type.route import item_type_route
-from app.import_stock.route import import_stock_route
 from app.warehouse.route import warehouse_route
+from app.transaction.route import transaction_route
 
 
 description = """
@@ -44,8 +44,8 @@ app.include_router(product_route, prefix=f"/{version_prefix}/product", tags=["pr
 app.include_router(bom_route, prefix=f"/{version_prefix}/bom", tags=["bom"])
 app.include_router(material_route, prefix=f"/{version_prefix}/material", tags=["material"])
 app.include_router(item_type_route, prefix=f"/{version_prefix}/item_type", tags=["item_type"])
-app.include_router(import_stock_route, prefix=f"/{version_prefix}/import_stock", tags=["import_stock"])
 app.include_router(warehouse_route, prefix=f"/{version_prefix}/warehouse", tags=["warehouse"])
+app.include_router(transaction_route, prefix=f"/{version_prefix}/transaction", tags=["transaction"])
 
 
 
