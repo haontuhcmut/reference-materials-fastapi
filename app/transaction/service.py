@@ -1,9 +1,14 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import Field, select
 from uuid import UUID
+from fastapi import HTTPException, status
 
 from app.db.model import Transaction, Inventory
 from app.transaction.schema import CreateTransactionsModel, TransactionType
+from app.item_type.service import ItemTypeService
+from app.error import ItemTypeNotFound
+
+item_type_service = ItemTypeService()
 
 
 class TransactionService:
@@ -21,51 +26,24 @@ class TransactionService:
         return transaction
 
     async def create_import_request(
-        self, import_request_data: CreateTransactionsModel, session: AsyncSession
+        self, transaction_data: CreateTransactionsModel, session: AsyncSession
     ):
-        transactions = []
+        for item in transaction_data.items:
+            item_type_id = item.item_type_id
+            quantity = item.quantity
 
-        for item in import_request_data.item_type_id:
-            item_type_id, quantity = item["item_type_id"], item["quantity"]
+            if transaction_data.transaction_type.IMPORT:
+                item_type = await item_type_service.get_type(item_type_id, session)
+                if item_type is None:
+                    raise ItemTypeNotFound()
 
-            if import_request_data.transaction_type == TransactionType.IMPORT:
-                statement = select(Inventory).where(
-                    Inventory.warehouse_id == import_request_data.warehouse_id,
-                    Inventory.item_type_id == item_type_id,
-                )
-                result = await session.exec(statement)
-                inventory = result.first()
-                if inventory:
-                    inventory.quantity += quantity
-                else:
-                    inventory = Inventory(
-                        warehouse_id=import_request_data.warehouse_id,
-                        item_type_id=item_type_id,
-                        quantity=quantity,
-                    )
-                    session.add(inventory)
 
-            transaction = Transaction(
-                warehouse_id=import_request_data.warehouse_id,
-                item_type_id=item_type_id,
-                quantity=quantity,
-                transaction_type=import_request_data.transaction_type,
-                description=import_request_data.description,
-            )
-            session.add(transaction)
-            transactions.append(transaction)
-        await session.commit()
-        return transactions
 
-    # async def create_export_request(
-    #     self, export_request_data: CreateTransactionsModel, session: AsyncSession
-    # ):
-    #     for item in export_request_data.item_type_id:
-    #         item_type_id, quantity = item["item_type_id"], item["quantity"]
-    #
-    #         statement = select(Inventory.quantity).where(
-    #             Inventory.warehouse_id == export_request_data.warehouse_id,
-    #             Inventory.item_type_id == item_type_id,
-    #         )
+
+
+
+
+
+
 
 
