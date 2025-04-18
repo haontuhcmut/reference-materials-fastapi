@@ -26,14 +26,14 @@ async def create_scheme(scheme_data: CreatePTSchemeModel, session: SessionDep):
     new_scheme = await pt_scheme_service.create_scheme(scheme_data, session)
     return new_scheme
 
-@pt_scheme_route.put("/", response_model=PTSchemeModel)
+@pt_scheme_route.put("/{scheme_id}", response_model=PTSchemeModel)
 async def update_scheme(scheme_id: str, data_update: CreatePTSchemeModel, session: SessionDep):
     updated_scheme = await pt_scheme_service.update_scheme(scheme_id, data_update, session)
     if updated_scheme is None:
         raise PTSChemeNotFound
     return updated_scheme
 
-@pt_scheme_route.delete("/")
+@pt_scheme_route.delete("/{scheme_id}")
 async def delete_scheme(scheme_id: str, session: SessionDep):
     deleted_scheme = await pt_scheme_service.delete_scheme(scheme_id, session)
     if deleted_scheme is None:

@@ -21,14 +21,14 @@ class TransactionModel(CreateTransactionsModel):
 class ImportStockModel(BaseModel):
     item_type_id: UUID
     warehouse_id: UUID
-    transaction_type: TransactionType.IMPORT
+    transaction_type: TransactionType = TransactionType.IMPORT
     quantity: float = Field(default=0, ge=0, le=99999)
     description: str | None = Field(default=None, max_length=1024)
 
 class ExportStockModel(BaseModel):
     item_type_id: UUID
     warehouse_id: UUID
-    transaction_type: TransactionType.EXPORT
+    transaction_type: TransactionType = TransactionType.EXPORT
     quantity: float = Field(default=0, ge=0, le=99999)
     description: str | None = Field(default=None, max_length=1024)
 

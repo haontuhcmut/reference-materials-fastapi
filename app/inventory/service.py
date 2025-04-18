@@ -17,5 +17,3 @@ class InventoryService:
         results = await session.exec(statement)
         inventory_item = results.first()
         return inventory_item
-
-    # async def stock_in(self, ):

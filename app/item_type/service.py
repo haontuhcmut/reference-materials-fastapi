@@ -7,7 +7,7 @@ from app.item_type.schema import CreateItemTypeModel
 
 class ItemTypeService:
     async def get_all_type(self, session: AsyncSession):
-        statement = select(ItemType).order_by(ItemType.type_name)
+        statement = select(ItemType).order_by(ItemType.name)
         results = await session.exec(statement)
         item_type = results.all()
         return item_type
@@ -37,7 +37,7 @@ class ItemTypeService:
         return None
 
     async def delete_type(self, type_id: str, session: AsyncSession):
-        delete_to_type = await self.delete_type(type_id, session)
+        delete_to_type = await self.get_type(type_id, session)
         if delete_to_type is not None:
             await session.delete(delete_to_type)
             await session.commit()
