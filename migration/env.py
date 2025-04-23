@@ -13,12 +13,10 @@ from app.db.model import (
     Product,
     BillOfMaterial,
     Material,
-    ItemType,
-    Transaction,
+    InventoryTransaction,
     Warehouse,
-    Inventory,
-    TestingPlan,
-    InternalContract,
+    Order,
+    OrderItem,
 )
 from app.config import Config
 

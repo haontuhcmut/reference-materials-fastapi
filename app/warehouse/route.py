@@ -19,6 +19,7 @@ async def get_warehouse_item(warehouse_id: str, session: SessionDep):
     warehouse = await warehouse_service.get_warehouse_item(warehouse_id, session)
     if warehouse is None:
         raise WarehouseNotFound()
+    return warehouse
 
 @warehouse_route.post("/", response_model=WarehouseModel)
 async def create_warehouse(warehouse_data: CreateWarehouseModel, session: SessionDep):

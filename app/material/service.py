@@ -14,7 +14,8 @@ class MaterialService:
         return materials
 
     async def get_material_item(self, material_id: str, session: AsyncSession):
-        statement = select(Material).where(Material.id == material_id)
+        material_uuid = UUID(material_id)
+        statement = select(Material).where(Material.id == material_uuid)
         result = await session.exec(statement)
         material = result.first()
         return material

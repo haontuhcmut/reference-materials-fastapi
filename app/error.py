@@ -40,29 +40,28 @@ class MaterialNotFound(ExceptionRegister):
     pass
 
 
-class ItemTypeNotFound(ExceptionRegister):
-    """Item type not found"""
-
-    pass
-
-
 class WarehouseNotFound(ExceptionRegister):
     """Warehouse not found"""
 
     pass
 
 
-class TransactionNotFound(ExceptionRegister):
-    """Transaction not found"""
+class InventoryTransactionNotFound(ExceptionRegister):
+    """Inventory transaction not found"""
 
     pass
 
 
-class WarehouseItemTypeNotFound(ExceptionRegister):
-    """Warehouse or Item type not found"""
+class OrderNotFound(ExceptionRegister):
+    """Order not found"""
 
     pass
 
+
+class OrderItemNotFound(ExceptionRegister):
+    """Order item not found"""
+
+    pass
 
 
 def create_exception_handler(
@@ -128,20 +127,9 @@ def register_all_errors(app: FastAPI):
     )
 
     app.add_exception_handler(
-        ItemTypeNotFound,
-        create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "message": "Item type not found",
-                "error_code": "item_type_not_found",
-            },
-        ),
-    )
-
-    app.add_exception_handler(
         WarehouseNotFound,
         create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "message": "Warehouse not found",
                 "error_code": "warehouse_not_found",
@@ -150,25 +138,34 @@ def register_all_errors(app: FastAPI):
     )
 
     app.add_exception_handler(
-        TransactionNotFound,
+        InventoryTransactionNotFound,
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
-                "message": "Transaction not found",
-                "error_code": "transaction_not_found",
+                "message": "Inventory transaction not found",
+                "error_code": "inventory_transaction_not_found",
             },
         ),
     )
 
     app.add_exception_handler(
-        WarehouseItemTypeNotFound,
+        OrderNotFound,
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={
-                "message": "Warehouse or Item type not found",
-                "error_code": "warehouse_or_item_type_not_found",
+                "message": "Order not found",
+                "error_code": "order_not_found",
             },
         ),
     )
 
-
+    app.add_exception_handler(
+        OrderItemNotFound,
+        create_exception_handler(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail={
+                "message": "Order item not found",
+                "error_code": "order_item_not_found",
+            },
+        ),
+    )

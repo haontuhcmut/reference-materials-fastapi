@@ -16,8 +16,8 @@ async def get_all_material(session: SessionDep):
     return material
 
 @material_route.get("/{material_id}", response_model=MaterialModel)
-async def get_material_item(materia_id: str, session: SessionDep):
-    material = await material_service.get_material_item(materia_id, session)
+async def get_material_item(material_id: str, session: SessionDep):
+    material = await material_service.get_material_item(material_id, session)
     if material is None:
         raise MaterialNotFound()
     return material

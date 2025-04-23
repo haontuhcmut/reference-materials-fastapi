@@ -1,6 +1,7 @@
 from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from uuid import UUID
 
 from app.db.model import Product
 from app.product.schema import CreateProductModel
@@ -13,10 +14,10 @@ class ProductService:
         return products
 
     async def get_product_item(self, product_id: str, session: AsyncSession):
-        product_uuid = product_id
+        product_uuid = UUID(product_id)
         statement = select(Product).where(Product.id == product_uuid)
         result = await session.exec(statement)
-        product = result.frist()
+        product = result.first()
         return product
 
     async def create_product(self, product_data: CreateProductModel, session: AsyncSession):
