@@ -3,12 +3,12 @@ from sqlmodel import select, desc, and_
 from uuid import UUID
 from fastapi import HTTPException, status
 
-from app.db.model import InventoryTransaction, Warehouse
+from app.db.model import InventoryTransaction, Warehouse, Product, Material
 from app.inventory_transaction.schema import (
     CreateExportImportStockModel,
     TransactionsType,
 )
-from app.error import WarehouseNotFound
+from app.error import WarehouseNotFound, ProductNotFound, MaterialNotFound
 
 
 class InventoryTransactionService:
@@ -32,7 +32,7 @@ class InventoryTransactionService:
         return inventory
 
     async def export_import_stock(
-            self, create_inventory: CreateExportImportStockModel, session: AsyncSession
+        self, create_inventory: CreateExportImportStockModel, session: AsyncSession
     ):
         data_dict = create_inventory.model_dump()
         warehouse_id = data_dict["warehouse_id"]
@@ -41,31 +41,58 @@ class InventoryTransactionService:
         quantity = data_dict["quantity"]
         transaction_type = data_dict["transaction_type"]
 
-        warehouse_result = await session.exec(
-            select(Warehouse).where(Warehouse.id == warehouse_id)
-        )
-        warehouse = warehouse_result.first()
-        if warehouse is None:
-            raise WarehouseNotFound()
-
-        if not material_id and not product_id:
+        if quantity <= 0:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
+                status_code=status.HTTP_400_BAD_REQUEST,
                 detail={
-                    "message": "Either material_id or product_id must be provided",
-                    "error_code": "material_or_product_not_none",
+                    "message": "Quantity must be greater than zero",
                 },
             )
 
+        # Validate warehouse
+        warehouse = await session.get(Warehouse, warehouse_id)
+        if not warehouse:
+            raise WarehouseNotFound()
+
+        # Validate product
+        product = await session.get(Product, product_id) if product_id else None
+        if product_id and not product:
+            raise ProductNotFound()
+
+        # Validate material
+        material = await session.get(Material, material_id) if material_id else None
+        if material_id and not material:
+            raise MaterialNotFound()
+
+        # Material or product must be provided
+        if not material and not product:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "message": "Either a valid material or product must be provided",
+                },
+            )
+
+        # Material or product, not both
+        if material is not None and product is not None:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={
+                    "message": "Only one of material or product should be provided.",
+                },
+            )
+
+        # Build filter conditions
         conditions = [InventoryTransaction.warehouse_id == warehouse_id]
-        if material_id:
+        if material:
             conditions.append(InventoryTransaction.material_id == material_id)
-        if product_id:
+        if product:
             conditions.append(InventoryTransaction.product_id == product_id)
 
-        existing_stmt = select(InventoryTransaction).where(and_(*conditions))
-        existing_result = await session.exec(existing_stmt)
-        existing_transaction = existing_result.first()
+        # Query existing inventory transaction
+        stmt = select(InventoryTransaction).where(and_(*conditions))
+        result = await session.exec(stmt)
+        existing_transaction = result.first()
 
         if transaction_type == TransactionsType.import_stock:
             if existing_transaction:
@@ -74,11 +101,8 @@ class InventoryTransactionService:
             else:
                 transaction = InventoryTransaction(**data_dict)
                 session.add(transaction)
-            await session.commit()
-            await session.refresh(transaction)
-            return transaction
 
-        if transaction_type == TransactionsType.export_stock:
+        elif transaction_type == TransactionsType.export_stock:
             if not existing_transaction:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
@@ -87,19 +111,28 @@ class InventoryTransactionService:
             if quantity > existing_transaction.quantity:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="The request must be less than the inventory",
+                    detail="The request must be less than or equal to the inventory",
                 )
             existing_transaction.quantity -= quantity
-            transaction = existing_transaction
-            await session.commit()
-            await session.refresh(transaction)
-            return transaction
+            transaction = InventoryTransaction(**data_dict)
+            session.add(transaction)
 
-    async def delete_inventory_transaction(self, inventory_transaction_id: str, session: AsyncSession):
-        inventory_to_delete = await self.get_inventory_transaction_item(inventory_transaction_id, session)
+        else:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail={"message": "Invalid transaction type"},
+            )
+        await session.commit()
+        return transaction
+
+    async def delete_inventory_transaction(
+        self, inventory_transaction_id: str, session: AsyncSession
+    ):
+        inventory_to_delete = await self.get_inventory_transaction_item(
+            inventory_transaction_id, session
+        )
         if inventory_to_delete is not None:
             await session.delete(inventory_to_delete)
             await session.commit()
             return inventory_to_delete
         return None
-

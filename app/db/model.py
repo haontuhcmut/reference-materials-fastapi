@@ -65,7 +65,7 @@ class InventoryTransaction(SQLModel, table=True):
     order_id: UUID | None = Field(default=None, foreign_key="order.id")
     transaction_type: str = Field(default=None, max_length=64)
     quantity: float = Field(default=0, ge=0, le=99999)
-    description: str = Field(default=None, max_length=1024)
+    description: str | None = Field(default=None, max_length=1024)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     warehouse: Optional["Warehouse"] = Relationship(back_populates="inventory_transactions")

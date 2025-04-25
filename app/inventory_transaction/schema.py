@@ -16,7 +16,7 @@ class CreateExportImportStockModel(BaseModel):
     order_id: UUID | None = Field(default=None)
     quantity: float = Field(default=0, ge=0, le=99999)
     transaction_type: TransactionsType
-    description: str = Field(default=None, max_length=1024)
+    description: str | None = Field(default=None, max_length=1024)
 
 
 class ExportImportStockModel(CreateExportImportStockModel):
