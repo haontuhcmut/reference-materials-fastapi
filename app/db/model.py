@@ -32,8 +32,8 @@ class Product(SQLModel, table=True):
 
     pt_scheme: PTScheme | None = Relationship(back_populates="products")
     bill_of_materials: list["BillOfMaterial"] = Relationship(back_populates="product")
-    inventory_transactions: list["InventoryTransaction"] = Relationship(back_populates="product")
-    order_items: list["OrderItem"] = Relationship(back_populates="product")
+    transaction_details: list["TransactionDetail"] = Relationship(back_populates="product")
+    inventory: Optional["Inventory"] = Relationship(back_populates="product")
 
 
 class BillOfMaterial(SQLModel, table=True):
@@ -54,24 +54,34 @@ class Material(SQLModel, table=True):
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     bill_of_materials: list[BillOfMaterial] = Relationship(back_populates="material")
-    inventory_transactions: list["InventoryTransaction"] = Relationship(back_populates="material")
+    transaction_details: list["TransactionDetail"] = Relationship(back_populates="material")
+    inventory: Optional["Inventory"] = Relationship(back_populates="material")
 
-class InventoryTransaction(SQLModel, table=True):
-    __tablename__ = "inventory_transaction"
+
+class Transaction(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    warehouse_id: UUID | None = Field(default=None, foreign_key="warehouse.id")
+    transaction_type: str = Field(default=None, max_length=16)
+    note: str | None = Field(default=None, max_length=1024)
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
+
+    transaction_details: list["TransactionDetail"] = Relationship(back_populates="transaction")
+
+class TransactionDetail(SQLModel, table=True):
+    __tablename__ = "transaction_detail"
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    transaction_id: UUID = Field(default=None, foreign_key="transaction.id")
+    warehouse_id: UUID = Field(default=None, foreign_key="warehouse.id")
     product_id: UUID | None = Field(default=None, foreign_key="product.id")
     material_id: UUID | None = Field(default=None, foreign_key="material.id")
-    order_id: UUID | None = Field(default=None, foreign_key="order.id")
     transaction_type: str = Field(default=None, max_length=64)
     quantity: float = Field(default=0, ge=0, le=99999)
     description: str | None = Field(default=None, max_length=1024)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    warehouse: Optional["Warehouse"] = Relationship(back_populates="inventory_transactions")
-    product: Product | None = Relationship(back_populates="inventory_transactions")
-    material: Material | None = Relationship(back_populates="inventory_transactions")
-    order: Optional["Order"] = Relationship(back_populates="inventory_transactions")
+    transaction: Transaction | None = Relationship(back_populates="transaction_details")
+    warehouse: Optional["Warehouse"] = Relationship(back_populates="transaction_details")
+    product: Product | None = Relationship(back_populates="transaction_details")
+    material: Material | None = Relationship(back_populates="transaction_details")
 
 
 class Warehouse(SQLModel, table=True):
@@ -80,22 +90,18 @@ class Warehouse(SQLModel, table=True):
     location: str = Field(default=None, max_length=128, nullable=False)
     type: str = Field(default=None, max_length=32)
 
-    inventory_transactions: list[InventoryTransaction] = Relationship(back_populates="warehouse")
+    transaction_details: list[TransactionDetail] = Relationship(back_populates="warehouse")
+    inventories: list["Inventory"] = Relationship(back_populates="warehouse")
 
-class Order(SQLModel, table=True):
+class Inventory(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    customer_name: str = Field(default=None, max_length=64)
-    order_time: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
-
-    inventory_transactions: list[InventoryTransaction] = Relationship(back_populates="order")
-    order_items: list["OrderItem"] = Relationship(back_populates="order")
-
-class OrderItem(SQLModel, table=True):
-    __tablename__ = "order_item"
-    id: UUID = Field(default_factory=uuid4, primary_key=True)
-    order_id: UUID | None = Field(default=None, foreign_key="order.id")
+    warehouse_id: UUID = Field(default=None, foreign_key="warehouse.id")
     product_id: UUID | None = Field(default=None, foreign_key="product.id")
+    material_id: UUID | None = Field(default=None, foreign_key="material.id")
     quantity: float = Field(default=0, ge=0, le=99999)
+    last_update: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
-    order: Order | None = Relationship(back_populates="order_items")
-    product: Product | None = Relationship(back_populates="order_items")
+    product: Product | None = Relationship(back_populates="inventory")
+    material: Material | None = Relationship(back_populates="inventory")
+    warehouse: Warehouse | None = Relationship(back_populates="inventories")
+
