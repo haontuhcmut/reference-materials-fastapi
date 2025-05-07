@@ -8,9 +8,7 @@ from app.product.route import product_route
 from app.bom.route import bom_route
 from app.material.route import material_route
 from app.warehouse.route import warehouse_route
-from app.inventory_transaction.route import inventory_transaction_route
-from app.order.route import order_route
-from app.order_item.route import order_item_route
+from app.transaction.route import transaction_route
 
 
 description = """
@@ -39,27 +37,11 @@ app = FastAPI(
 
 register_all_errors(app)
 
-app.include_router(
-    category_route, prefix=f"/{version_prefix}/category", tags=["category"]
-)
-app.include_router(
-    pt_scheme_route, prefix=f"/{version_prefix}/pt_scheme", tags=["pt_scheme"]
-)
+app.include_router(category_route, prefix=f"/{version_prefix}/category", tags=["category"])
+app.include_router(pt_scheme_route, prefix=f"/{version_prefix}/pt_scheme", tags=["pt_scheme"])
 app.include_router(product_route, prefix=f"/{version_prefix}/product", tags=["product"])
 app.include_router(bom_route, prefix=f"/{version_prefix}/bom", tags=["bom"])
-app.include_router(
-    material_route, prefix=f"/{version_prefix}/material", tags=["material"]
-)
-app.include_router(
-    warehouse_route, prefix=f"/{version_prefix}/warehouse", tags=["warehouse"]
-)
-app.include_router(
-    inventory_transaction_route,
-    prefix=f"/{version_prefix}/inventory_transaction",
-    tags=["inventory_transaction"],
-)
+app.include_router(material_route, prefix=f"/{version_prefix}/material", tags=["material"])
+app.include_router(warehouse_route, prefix=f"/{version_prefix}/warehouse", tags=["warehouse"])
+app.include_router(transaction_route, prefix=f"/{version_prefix}/transaction", tags=["transaction"])
 
-app.include_router(order_route, prefix=f"/{version_prefix}/order", tags=["order"])
-app.include_router(
-    order_item_route, prefix=f"/{version_prefix}/order_item", tags=["order_item"]
-)
