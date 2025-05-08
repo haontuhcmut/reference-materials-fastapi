@@ -73,10 +73,7 @@ class TransactionDetail(SQLModel, table=True):
     warehouse_id: UUID = Field(default=None, foreign_key="warehouse.id")
     product_id: UUID | None = Field(default=None, foreign_key="product.id")
     material_id: UUID | None = Field(default=None, foreign_key="material.id")
-    transaction_type: str = Field(default=None, max_length=64)
     quantity: float = Field(default=0, ge=0, le=99999)
-    description: str | None = Field(default=None, max_length=1024)
-    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     transaction: Transaction | None = Relationship(back_populates="transaction_details")
     warehouse: Optional["Warehouse"] = Relationship(back_populates="transaction_details")
