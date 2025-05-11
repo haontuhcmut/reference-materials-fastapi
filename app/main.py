@@ -9,6 +9,7 @@ from app.bom.route import bom_route
 from app.material.route import material_route
 from app.warehouse.route import warehouse_route
 from app.transaction.route import transaction_route
+from app.transaction_detail.route import transaction_detail_route
 
 
 description = """
@@ -44,4 +45,5 @@ app.include_router(bom_route, prefix=f"/{version_prefix}/bom", tags=["bom"])
 app.include_router(material_route, prefix=f"/{version_prefix}/material", tags=["material"])
 app.include_router(warehouse_route, prefix=f"/{version_prefix}/warehouse", tags=["warehouse"])
 app.include_router(transaction_route, prefix=f"/{version_prefix}/transaction", tags=["transaction"])
+app.include_router(transaction_detail_route, prefix=f"/{version_prefix}/transaction_detail", tags=["transaction_detail"])
 

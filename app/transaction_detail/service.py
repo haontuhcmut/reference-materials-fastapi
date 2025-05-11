@@ -1,23 +1,29 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
-from uuid import UUID
 
-from app.db.model import TransactionDetail
-
+from app.db.model import TransactionDetail, Transaction
 
 
 class TransactionDetailService:
     async def get_all_transaction_detail(self, session: AsyncSession):
-        statement = select(TransactionDetail)
-        results = await session.exec(statement)
-        transaction_details = results.all()
-        return transaction_details
+        statement = (
+            select(TransactionDetail, Transaction)
+            .join(Transaction, Transaction.id == TransactionDetail.transaction_id)
+        )
+        result = await session.exec(statement)
+        rows = result.all()
 
-    async def get_transaction_detail(self, transaction_detail_id: str, session: AsyncSession):
-        transaction_detail_uuid = UUID(transaction_detail_id)
-        statement = select(TransactionDetail).where(TransactionDetail.id == transaction_detail_uuid)
-        results = await session.exec(statement)
-        transaction_detail = results.frist()
-        return transaction_detail
-
-    async def create_transaction_detail(self, ):
+        response = [
+            {
+                "transaction_id": trans.id,
+                "transaction_type": trans.transaction_type,
+                "note": trans.note,
+                "created_at": trans.created_at,
+                "warehouse_id": detail.warehouse_id,
+                "quantity": detail.quantity,
+                "product_id": detail.product_id,
+                "material_id": detail.material_id
+            }
+            for detail, trans in rows
+        ]
+        return response

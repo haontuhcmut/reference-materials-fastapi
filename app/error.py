@@ -46,24 +46,6 @@ class WarehouseNotFound(ExceptionRegister):
     pass
 
 
-class InventoryTransactionNotFound(ExceptionRegister):
-    """Inventory transaction not found"""
-
-    pass
-
-
-class OrderNotFound(ExceptionRegister):
-    """Order not found"""
-
-    pass
-
-
-class OrderItemNotFound(ExceptionRegister):
-    """Order item not found"""
-
-    pass
-
-
 def create_exception_handler(
     status_code: int, detail: Any
 ) -> Callable[[Request, Exception], JSONResponse]:
@@ -137,35 +119,8 @@ def register_all_errors(app: FastAPI):
         ),
     )
 
-    app.add_exception_handler(
-        InventoryTransactionNotFound,
-        create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "message": "Inventory transaction not found",
-                "error_code": "inventory_transaction_not_found",
-            },
-        ),
-    )
 
-    app.add_exception_handler(
-        OrderNotFound,
-        create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "message": "Order not found",
-                "error_code": "order_not_found",
-            },
-        ),
-    )
 
-    app.add_exception_handler(
-        OrderItemNotFound,
-        create_exception_handler(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail={
-                "message": "Order item not found",
-                "error_code": "order_item_not_found",
-            },
-        ),
-    )
+
+
+
