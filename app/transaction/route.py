@@ -25,7 +25,7 @@ async def create_transaction_detail(transaction_data: CreateTransactionDetail, s
     new_transaction = await transaction_service.create_transaction_detail(transaction_data, session)
     return new_transaction
 
-@transaction_route.get("/transaction_details")
+@transaction_route.get("/transaction_details/", response_model=list[TransactionDetailRespond])
 async def get_all_transaction_details(session: SessionDep):
     transaction_details = await transaction_service.get_all_transaction_details(session)
     return transaction_details

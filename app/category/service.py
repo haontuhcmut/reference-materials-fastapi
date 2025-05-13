@@ -1,7 +1,7 @@
 from uuid import UUID
 
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
+from sqlmodel import select, func
 
 from app.category.schema import CreateCategoryModel
 
@@ -14,6 +14,14 @@ class CategoryService:
         results = await session.exec(statement)
         all_category = results.all()
         return all_category
+
+    async def get_paginated_categories(self, skip: int, limit: int, session: AsyncSession):
+        total = await session.scalar((select(func.count()).select_from(Category)))
+        statement = select(Category).order_by(Category.name).offset(skip).limit(limit)
+        results = await session.exec(statement)
+        data = results.all()
+        return total, data
+
 
     async def get_category_item(self, category_id: str, session: AsyncSession):
         category_uuid = UUID(category_id)

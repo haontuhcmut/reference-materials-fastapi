@@ -1,9 +1,11 @@
-from fastapi import APIRouter, status, HTTPException
+import math
+
+from fastapi import APIRouter, status, HTTPException, Query
 from fastapi.responses import JSONResponse
 
 from app.db.dependency import SessionDep
 from app.category.service import CategoryService
-from app.category.schema import CategoryModel, CreateCategoryModel
+from app.category.schema import CategoryModel, CreateCategoryModel, PaginatedCategory
 from app.error import CategoryNotFound
 
 category_service = CategoryService()
@@ -14,6 +16,24 @@ category_route = APIRouter()
 async def get_all_category(session: SessionDep):
     categories = await category_service.get_all_category(session)
     return categories
+
+
+@category_route.get("/paginated_category/", response_model=PaginatedCategory)
+async def get_page_category(
+    session: SessionDep, page: int = Query(1, ge=1), page_size: int = Query(5, ge=1)
+):
+    skip = (page - 1) * page_size
+    total, data = await category_service.get_paginated_categories(
+        skip=skip, limit=page_size, session=session
+    )
+    total_pages = math.ceil(total / page_size)
+    return {
+        "total": total,
+        "page": page,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "data": data,
+    }
 
 
 @category_route.get("/{category_id}", response_model=CategoryModel)
@@ -33,8 +53,12 @@ async def create_category(category_data: CreateCategoryModel, session: SessionDe
 
 
 @category_route.put("/{category_id}", response_model=CategoryModel)
-async def update_category(category_id: str, data_update: CreateCategoryModel, session: SessionDep):
-    updated_category = await category_service.update_category(category_id, data_update, session)
+async def update_category(
+    category_id: str, data_update: CreateCategoryModel, session: SessionDep
+):
+    updated_category = await category_service.update_category(
+        category_id, data_update, session
+    )
     if updated_category is None:
         raise CategoryNotFound()
     return updated_category
