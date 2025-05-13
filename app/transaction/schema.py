@@ -9,6 +9,16 @@ class TransactionType(str, Enum):
     EXPORT = "export"
 
 
+class TransactionBase(BaseModel):
+    transaction_type: TransactionType
+    note: str | None
+
+
+class TransactionModel(TransactionBase):
+    id: UUID
+    created_at: datetime
+
+
 class TransactionDetailBase(BaseModel):
     warehouse_id: UUID
     product_id: UUID | None = Field(default=None)
@@ -16,21 +26,13 @@ class TransactionDetailBase(BaseModel):
     quantity: float = Field(default=0, ge=0, le=99999)
 
 
-class CreateTransactionDetail(BaseModel):
-    transaction_type: TransactionType
-    note: str | None = Field(default=None, max_length=1024)
-    details: list[TransactionDetailBase]
-
-
-class TransactionModel(BaseModel):
-    id: UUID
-    transaction_type: TransactionType
-    note: str | None
-    created_at: datetime
-
 class TransactionDetailModel(TransactionDetailBase):
     id: UUID
 
-class TransactionDetailRespond(BaseModel):
-    transaction: TransactionModel
-    detail: list[TransactionDetailModel]
+
+class CreateTransactionDetail(TransactionBase):
+    details: list[TransactionDetailBase]
+
+
+class TransactionDetailRespond(TransactionModel):
+    details: list[TransactionDetailModel]
