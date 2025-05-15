@@ -15,6 +15,11 @@ class CategoryNotFound(ExceptionRegister):
 
     pass
 
+class CategoryExist(ExceptionRegister):
+    """Category is exits"""
+
+    pass
+
 
 class PTSChemeNotFound(ExceptionRegister):
     """PT scheme not found"""
@@ -65,6 +70,17 @@ def register_all_errors(app: FastAPI):
                 "error_code": "category_not_found",
             },
         ),
+    )
+
+    app.add_exception_handler(
+        CategoryExist,
+        create_exception_handler(
+        status_code=status.HTTP_409_CONFLICT,
+            detail={
+                "message": "Category is exist",
+                "error_code": "category_exist"
+            }
+        )
     )
 
     app.add_exception_handler(

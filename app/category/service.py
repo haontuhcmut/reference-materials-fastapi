@@ -1,27 +1,18 @@
 from uuid import UUID
-
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, func
 
-from app.category.schema import CreateCategoryModel
-
+from fastapi_pagination.ext.sqlmodel import paginate
+from fastapi_pagination import Page
+from app.category.schema import CreateCategoryModel, CategoryModel
 from app.db.model import Category
+from app.error import CategoryExist
 
 
 class CategoryService:
-    async def get_all_category(self, session: AsyncSession):
-        statement = select(Category).order_by(Category.name)
-        results = await session.exec(statement)
-        all_category = results.all()
-        return all_category
-
-    async def get_paginated_categories(self, skip: int, limit: int, session: AsyncSession):
-        total = await session.scalar((select(func.count()).select_from(Category)))
-        statement = select(Category).order_by(Category.name).offset(skip).limit(limit)
-        results = await session.exec(statement)
-        data = results.all()
-        return total, data
-
+    async def get_all_category(self, session: AsyncSession) -> Page[CategoryModel]:
+        query = select(Category).order_by(Category.name)
+        return await paginate(session, query)
 
     async def get_category_item(self, category_id: str, session: AsyncSession):
         category_uuid = UUID(category_id)
@@ -30,14 +21,27 @@ class CategoryService:
         category_item = results.first()
         return category_item
 
-    async def create_category(self, category_data: CreateCategoryModel, session: AsyncSession):
+    async def create_category(
+        self, category_data: CreateCategoryModel, session: AsyncSession
+    ):
         data_dict = category_data.model_dump()
+        # Exists checking
+        category_exist = (
+            await session.exec(
+                select(Category).where(Category.name == data_dict["name"])
+            )
+        ).first()
+        if category_exist is not None:
+            raise CategoryExist()
+
         new_category = Category(**data_dict)
         session.add(new_category)
         await session.commit()
         return new_category
 
-    async def update_category(self, category_id: str, data_update: CreateCategoryModel, session: AsyncSession):
+    async def update_category(
+        self, category_id: str, data_update: CreateCategoryModel, session: AsyncSession
+    ):
         category_to_update = await self.get_category_item(category_id, session)
 
         if category_to_update is not None:
@@ -58,4 +62,3 @@ class CategoryService:
             await session.commit()
             return category_to_delete
         return None
-

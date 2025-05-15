@@ -1,39 +1,22 @@
-import math
-
-from fastapi import APIRouter, status, HTTPException, Query
+from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
+from fastapi_pagination import Page, Params
+from typing import Annotated
 
 from app.db.dependency import SessionDep
 from app.category.service import CategoryService
-from app.category.schema import CategoryModel, CreateCategoryModel, PaginatedCategory
+from app.category.schema import CategoryModel, CreateCategoryModel
 from app.error import CategoryNotFound
+
 
 category_service = CategoryService()
 category_route = APIRouter()
 
 
-@category_route.get("/", response_model=list[CategoryModel])
-async def get_all_category(session: SessionDep):
+@category_route.get("/", response_model=Page[CategoryModel])
+async def get_all_category(session: SessionDep, params: Annotated[Params, Depends()]):
     categories = await category_service.get_all_category(session)
     return categories
-
-
-@category_route.get("/paginated_category/", response_model=PaginatedCategory)
-async def get_page_category(
-    session: SessionDep, page: int = Query(1, ge=1), page_size: int = Query(5, ge=1)
-):
-    skip = (page - 1) * page_size
-    total, data = await category_service.get_paginated_categories(
-        skip=skip, limit=page_size, session=session
-    )
-    total_pages = math.ceil(total / page_size)
-    return {
-        "total": total,
-        "page": page,
-        "page_size": page_size,
-        "total_pages": total_pages,
-        "data": data,
-    }
 
 
 @category_route.get("/{category_id}", response_model=CategoryModel)

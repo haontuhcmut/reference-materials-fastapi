@@ -12,3 +12,11 @@ class CreatePTSchemeModel(BaseModel):
 class PTSchemeModel(CreatePTSchemeModel):
     id: UUID
 
+class PTSchemeWithCategoryModel(BaseModel):
+    id: UUID
+    category_name: str
+    pt_name: str
+    year: int
+    analytes: str
+
+

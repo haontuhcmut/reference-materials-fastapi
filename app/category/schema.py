@@ -8,9 +8,3 @@ class CreateCategoryModel(BaseModel):
 class CategoryModel(CreateCategoryModel):
     id: UUID
 
-class PaginatedCategory(BaseModel):
-    total: int
-    page: int
-    page_size: int
-    total_pages: int
-    data: list[CategoryModel]
