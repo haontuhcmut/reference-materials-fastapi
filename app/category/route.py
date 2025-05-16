@@ -14,7 +14,7 @@ category_route = APIRouter()
 
 
 @category_route.get("/", response_model=Page[CategoryModel])
-async def get_all_category(session: SessionDep, params: Annotated[Params, Depends()]):
+async def get_all_category(session: SessionDep, _params: Annotated[Params, Depends()]):
     categories = await category_service.get_all_category(session)
     return categories
 

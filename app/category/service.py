@@ -1,6 +1,6 @@
 from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select, func
+from sqlmodel import select
 
 from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_pagination import Page
