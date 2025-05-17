@@ -13,11 +13,11 @@ pt_scheme_route = APIRouter()
 
 
 @pt_scheme_route.get("/", response_model=Page[PTSchemeWithCategoryModel])
-async def get_all_scheme(params: Annotated[Params, Depends()], session: SessionDep):
+async def get_all_scheme(_params: Annotated[Params, Depends()], session: SessionDep):
     pt_scheme = await pt_scheme_service.get_all_pt_scheme(session)
     return pt_scheme
 
-@pt_scheme_route.get("/{scheme_id}", response_model=PTSchemeModel)
+@pt_scheme_route.get("/{scheme_id}")
 async def get_scheme_item(scheme_id: str, session: SessionDep):
     scheme_item = await pt_scheme_service.get_scheme_item(scheme_id, session)
     if scheme_item is None:

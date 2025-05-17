@@ -36,10 +36,20 @@ class PTSchemeService:
 
     async def get_scheme_item(self, scheme_id: str, session: AsyncSession):
         scheme_uuid = UUID(scheme_id)
-        statement = select(PTScheme).where(PTScheme.id == scheme_uuid)
+        statement = (select(PTScheme, Category.name.label("category_name"))
+                     .join(Category, PTScheme.category_id == Category.id)
+                     .where(PTScheme.id == scheme_uuid)
+                     )
         result = await session.exec(statement)
-        scheme = result.first()
-        return scheme
+        row = result.first()
+        if row is None:
+            return None
+        scheme, category_name =row
+        scheme_dict = scheme.model_dump()
+        return PTSchemeWithCategoryModel(
+            **scheme_dict,
+            category_name= category_name
+        )
 
     async def create_scheme(
         self, scheme_data: CreatePTSchemeModel, session: AsyncSession

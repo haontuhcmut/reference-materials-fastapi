@@ -14,9 +14,14 @@ class PTSchemeModel(CreatePTSchemeModel):
 
 class PTSchemeWithCategoryModel(BaseModel):
     id: UUID
+    name: str = Field(alias="pt_name")
     category_name: str
-    pt_name: str
     year: int
     analytes: str
+
+    class Config:
+        populate_by_name = True
+
+
 
 
