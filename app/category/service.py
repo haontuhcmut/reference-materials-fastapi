@@ -6,7 +6,7 @@ from fastapi_pagination.ext.sqlmodel import paginate
 from fastapi_pagination import Page
 from app.category.schema import CreateCategoryModel, CategoryModel
 from app.db.model import Category
-from app.error import CategoryExist
+from app.error import CategoryAlreadyExist
 
 
 class CategoryService:
@@ -32,7 +32,7 @@ class CategoryService:
             )
         ).first()
         if category_exist is not None:
-            raise CategoryExist()
+            raise CategoryAlreadyExist()
 
         new_category = Category(**data_dict)
         session.add(new_category)

@@ -15,8 +15,9 @@ class CategoryNotFound(ExceptionRegister):
 
     pass
 
-class CategoryExist(ExceptionRegister):
-    """Category is exits"""
+
+class CategoryAlreadyExist(ExceptionRegister):
+    """Category already exist"""
 
     pass
 
@@ -25,6 +26,10 @@ class PTSChemeNotFound(ExceptionRegister):
     """PT scheme not found"""
 
     pass
+
+
+class PTSchemeAlreadyExist(ExceptionRegister):
+    """PT scheme already exist"""
 
 
 class ProductNotFound(ExceptionRegister):
@@ -73,14 +78,14 @@ def register_all_errors(app: FastAPI):
     )
 
     app.add_exception_handler(
-        CategoryExist,
+        CategoryAlreadyExist,
         create_exception_handler(
-        status_code=status.HTTP_409_CONFLICT,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail={
-                "message": "Category is exist",
-                "error_code": "category_exist"
-            }
-        )
+                "message": "Category already exist",
+                "error_code": "category_already_exist",
+            },
+        ),
     )
 
     app.add_exception_handler(
@@ -90,6 +95,17 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "PT scheme not found",
                 "error_code": "pt_scheme_not_found",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        PTSchemeAlreadyExist,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "PT scheme already exist",
+                "error_code": "pt_scheme_already_exists",
             },
         ),
     )
@@ -134,9 +150,3 @@ def register_all_errors(app: FastAPI):
             },
         ),
     )
-
-
-
-
-
-

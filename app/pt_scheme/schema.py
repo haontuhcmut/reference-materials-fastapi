@@ -14,6 +14,7 @@ class PTSchemeModel(CreatePTSchemeModel):
 
 class PTSchemeWithCategoryModel(BaseModel):
     id: UUID
+    pt_scheme_code: str
     name: str = Field(alias="pt_name")
     category_name: str
     year: int

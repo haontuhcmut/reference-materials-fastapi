@@ -17,23 +17,23 @@ async def get_all_scheme(_params: Annotated[Params, Depends()], session: Session
     pt_scheme = await pt_scheme_service.get_all_pt_scheme(session)
     return pt_scheme
 
-@pt_scheme_route.get("/{scheme_id}")
+@pt_scheme_route.get("/{scheme_id}", response_model=PTSchemeWithCategoryModel)
 async def get_scheme_item(scheme_id: str, session: SessionDep):
     scheme_item = await pt_scheme_service.get_scheme_item(scheme_id, session)
     if scheme_item is None:
         raise PTSChemeNotFound()
     return scheme_item
 
-@pt_scheme_route.post("/", response_model=PTSchemeModel)
+@pt_scheme_route.post("/", response_model=PTSchemeWithCategoryModel)
 async def create_scheme(scheme_data: CreatePTSchemeModel, session: SessionDep):
     new_scheme = await pt_scheme_service.create_scheme(scheme_data, session)
     return new_scheme
 
-@pt_scheme_route.put("/{scheme_id}", response_model=PTSchemeModel)
+@pt_scheme_route.put("/{scheme_id}", response_model=PTSchemeWithCategoryModel)
 async def update_scheme(scheme_id: str, data_update: CreatePTSchemeModel, session: SessionDep):
     updated_scheme = await pt_scheme_service.update_scheme(scheme_id, data_update, session)
     if updated_scheme is None:
-        raise PTSChemeNotFound
+        raise PTSChemeNotFound()
     return updated_scheme
 
 @pt_scheme_route.delete("/{scheme_id}")
