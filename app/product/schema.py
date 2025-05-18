@@ -12,3 +12,16 @@ class ProductModel(CreateProductModel):
     id: UUID
     created_at: datetime
 
+class ProductModelResponse(BaseModel):
+    id: UUID
+    pt_scheme_code: str
+    pt_name: str
+    product_code: str
+    name: str
+    created_at: datetime
+
+class ProductItemDetailResponse(ProductModelResponse):
+    category_name: str
+
+
+

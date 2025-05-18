@@ -1,7 +1,10 @@
-from fastapi import APIRouter, status
-from fastapi.responses import JSONResponse
+from typing import Annotated
 
-from app.product.schema import CreateProductModel, ProductModel
+from fastapi import APIRouter, status, Depends
+from fastapi.responses import JSONResponse
+from fastapi_pagination import Page, Params, paginate
+
+from app.product.schema import CreateProductModel, ProductModelResponse
 from app.product.service import ProductService
 from app.error import ProductNotFound
 from app.db.dependency import SessionDep
@@ -10,13 +13,13 @@ product_service = ProductService()
 product_route = APIRouter()
 
 
-@product_route.get("/", response_model=list[ProductModel])
-async def get_all_product(session: SessionDep):
+@product_route.get("/", response_model=Page[ProductModelResponse])
+async def get_all_product(_params: Annotated[Params, Depends()], session: SessionDep):
     products = await product_service.get_all_product(session)
-    return products
+    return paginate(products)
 
 
-@product_route.get("/{product_id}", response_model=ProductModel)
+@product_route.get("/{product_id}")
 async def get_product_item(product_id: str, session: SessionDep):
     product = await product_service.get_product_item(product_id, session)
     if product is None:
@@ -24,13 +27,13 @@ async def get_product_item(product_id: str, session: SessionDep):
     return product
 
 
-@product_route.post("/", response_model=ProductModel)
+@product_route.post("/")
 async def create_product(product_data: CreateProductModel, session: SessionDep):
     new_product = await product_service.create_product(product_data, session)
     return new_product
 
 
-@product_route.put("/{product_id}", response_model=ProductModel)
+@product_route.put("/{product_id}")
 async def update_product(
     product_id: str, data_update: CreateProductModel, session: SessionDep
 ):

@@ -2,17 +2,18 @@ from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 
-from fastapi_pagination.ext.sqlmodel import paginate
-from fastapi_pagination import Page
-from app.category.schema import CreateCategoryModel, CategoryModel
+
+from app.category.schema import CreateCategoryModel
 from app.db.model import Category
 from app.error import CategoryAlreadyExist
 
 
 class CategoryService:
-    async def get_all_category(self, session: AsyncSession) -> Page[CategoryModel]:
-        query = select(Category).order_by(Category.name)
-        return await paginate(session, query)
+    async def get_all_category(self, session: AsyncSession):
+        statement = select(Category).order_by(Category.name)
+        results = await session.exec(statement)
+        categories = results.all()
+        return categories
 
     async def get_category_item(self, category_id: str, session: AsyncSession):
         category_uuid = UUID(category_id)
@@ -42,6 +43,10 @@ class CategoryService:
     async def update_category(
         self, category_id: str, data_update: CreateCategoryModel, session: AsyncSession
     ):
+        category_exits = (await session.exec(select(Category).where(Category.name == data_update.name))).first()
+        if category_exits is not None:
+            raise CategoryAlreadyExist()
+
         category_to_update = await self.get_category_item(category_id, session)
 
         if category_to_update is not None:

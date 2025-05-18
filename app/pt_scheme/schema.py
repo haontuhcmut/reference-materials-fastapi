@@ -21,7 +21,7 @@ class PTSchemeWithCategoryModel(BaseModel):
     analytes: str
 
     class Config:
-        populate_by_name = True
+        populate_by_name = True #relate alias
 
 
 
