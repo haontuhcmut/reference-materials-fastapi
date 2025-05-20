@@ -10,6 +10,12 @@ class ExceptionRegister(Exception):
     pass
 
 
+class InvalidIDFormat(ExceptionRegister):
+    """Invalid ID format"""
+
+    pass
+
+
 class CategoryNotFound(ExceptionRegister):
     """Category not found"""
 
@@ -73,6 +79,17 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "Category not found",
                 "error_code": "category_not_found",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        InvalidIDFormat,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Invalid ID format",
+                "error_code": "invalid_id_format"
             },
         ),
     )

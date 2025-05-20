@@ -5,7 +5,7 @@ from sqlmodel import select
 
 from app.category.schema import CreateCategoryModel
 from app.db.model import Category
-from app.error import CategoryAlreadyExist
+from app.error import CategoryAlreadyExist, InvalidIDFormat
 
 
 class CategoryService:
@@ -16,7 +16,11 @@ class CategoryService:
         return categories
 
     async def get_category_item(self, category_id: str, session: AsyncSession):
-        category_uuid = UUID(category_id)
+        try:
+            category_uuid = UUID(category_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
         statement = select(Category).where(Category.id == category_uuid)
         results = await session.exec(statement)
         category_item = results.first()

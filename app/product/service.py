@@ -4,8 +4,10 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select,desc
 from uuid import UUID
 
-from app.db.model import Product
-from app.product.schema import CreateProductModel, ProductModelResponse
+from app.db.model import Product, Category, PTScheme, BillOfMaterial
+from app.product.schema import CreateProductModel, ProductModelResponse, ProductItemDetailResponse, MaterialNameBase
+from app.error import InvalidIDFormat, ProductNotFound
+
 
 class ProductService:
     async def get_all_product(self, session: AsyncSession):
@@ -19,6 +21,7 @@ class ProductService:
             ProductModelResponse(
                 **product.model_dump(),
                 pt_scheme_code=product.pt_scheme.pt_scheme_code,
+                analytes=product.pt_scheme.analytes,
                 pt_name=product.pt_scheme.name,
             )
             for product in products
@@ -26,15 +29,49 @@ class ProductService:
         return product_response
 
     async def get_product_item(self, product_id: str, session: AsyncSession):
-        product_uuid = UUID(product_id)
-        statement = (select(Product)
-                     .options(selectinload(Product.pt_scheme)
-                              .selectinload(Product.inventory)
-                              .selectinload(Product.bill_of_materials))
-                     )
+        try:
+            product_uuid = UUID(product_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
+        statement = (
+            select(Product)
+            .where(Product.id == product_uuid)
+            .options(
+                selectinload(Product.pt_scheme).selectinload(PTScheme.category),
+                selectinload(Product.bill_of_materials).selectinload(BillOfMaterial.material),
+                selectinload(Product.inventory),
+            )
+        )
         result = await session.exec(statement)
         product = result.first()
-        return product
+
+        if not product:
+            raise ProductNotFound()
+
+        # Build the response data explicitly
+        response_data = {
+            "id": product.id,
+            "pt_scheme_code": product.pt_scheme.pt_scheme_code if product.pt_scheme else None,
+            "pt_name": product.pt_scheme.name if product.pt_scheme else None,
+            "analytes": product.pt_scheme.analytes if product.pt_scheme else None,
+            "product_code": product.product_code,
+            "sample_name": product.name,  # Using alias
+            "created_at": product.created_at,
+            "category_name": product.pt_scheme.category.name if product.pt_scheme and product.pt_scheme.category else None,
+            "bill_of_materials": [
+                {
+                    "material_code": bom.material.material_code,
+                    "material_name": bom.material.name
+                }
+                for bom in product.bill_of_materials
+                if bom.material
+            ],
+            "quantity": product.inventory.quantity if product.inventory else 0.0
+        }
+
+        return ProductItemDetailResponse.model_validate(response_data)
+
 
     async def create_product(self, product_data: CreateProductModel, session: AsyncSession):
         data_dict = product_data.model_dump()

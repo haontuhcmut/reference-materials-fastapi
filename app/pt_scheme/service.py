@@ -5,7 +5,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db.model import PTScheme, Category
 from app.pt_scheme.schema import CreatePTSchemeModel, PTSchemeWithCategoryModel
-from app.error import PTSchemeAlreadyExist, CategoryNotFound
+from app.error import PTSchemeAlreadyExist, CategoryNotFound, InvalidIDFormat
 
 
 class PTSchemeService:
@@ -27,7 +27,11 @@ class PTSchemeService:
         return pt_schemes_response
 
     async def get_scheme_item(self, scheme_id: str, session: AsyncSession):
-        scheme_uuid = UUID(scheme_id)
+        try:
+            scheme_uuid = UUID(scheme_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
         statement = (
             select(PTScheme, Category.name.label("category_name"))
             .join(Category, PTScheme.category_id == Category.id)

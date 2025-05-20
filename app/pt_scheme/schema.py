@@ -1,6 +1,6 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from uuid import UUID
-from datetime import datetime, timezone
+
 
 class CreatePTSchemeModel(BaseModel):
     category_id: UUID
@@ -20,9 +20,5 @@ class PTSchemeWithCategoryModel(BaseModel):
     year: int
     analytes: str
 
-    class Config:
-        populate_by_name = True #relate alias
-
-
-
+    model_config = ConfigDict(validate_by_name=True, validate_by_alias=True)
 
