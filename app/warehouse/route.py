@@ -1,5 +1,7 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
+from fastapi_pagination import Page, Params, paginate
+from typing import Annotated
 
 from app.warehouse.schema import CreateWarehouseModel, WarehouseModel
 from app.warehouse.service import WarehouseService
@@ -9,14 +11,14 @@ from app.db.dependency import SessionDep
 warehouse_service = WarehouseService()
 warehouse_route = APIRouter()
 
-@warehouse_route.get("/", response_model=list[WarehouseModel])
-async def get_all_warehouse(session: SessionDep):
+@warehouse_route.get("/", response_model=Page[WarehouseModel])
+async def get_all_warehouse(_params: Annotated[Params, Depends()], session: SessionDep):
     warehouse = await warehouse_service.get_all_warehouse(session)
-    return warehouse
+    return paginate(warehouse)
 
-@warehouse_route.get("/{warehouse_id}", response_model=WarehouseModel)
-async def get_warehouse_item(warehouse_id: str, session: SessionDep):
-    warehouse = await warehouse_service.get_warehouse_item(warehouse_id, session)
+@warehouse_route.get("/{warehouse_id}")
+async def get_warehouse_detail(warehouse_id: str, session: SessionDep):
+    warehouse = await warehouse_service.get_warehouse_detail(warehouse_id, session)
     if warehouse is None:
         raise WarehouseNotFound()
     return warehouse

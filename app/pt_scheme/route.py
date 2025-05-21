@@ -14,8 +14,8 @@ pt_scheme_route = APIRouter()
 
 @pt_scheme_route.get("/", response_model=Page[PTSchemeWithCategoryModel])
 async def get_all_scheme(_params: Annotated[Params, Depends()], session: SessionDep):
-    pt_scheme = await pt_scheme_service.get_all_pt_scheme(session)
-    return paginate(pt_scheme)
+    results = await pt_scheme_service.get_all_pt_scheme(session)
+    return paginate(results)
 
 @pt_scheme_route.get("/{scheme_id}", response_model=PTSchemeWithCategoryModel)
 async def get_scheme_item(scheme_id: str, session: SessionDep):
@@ -30,7 +30,7 @@ async def get_scheme_item(scheme_id: str, session: SessionDep):
 @pt_scheme_route.post("/", response_model=PTSchemeWithCategoryModel)
 async def create_scheme(scheme_data: CreatePTSchemeModel, session: SessionDep):
     new_scheme, category_name = await pt_scheme_service.create_scheme(scheme_data, session)
-    return PTSchemeWithCategoryModel(**new_scheme, category_name=category_name)
+    return PTSchemeWithCategoryModel(**new_scheme.model_dump(), category_name=category_name)
 
 @pt_scheme_route.put("/{scheme_id}", response_model=PTSchemeWithCategoryModel)
 async def update_scheme(scheme_id: str, data_update: CreatePTSchemeModel, session: SessionDep):
@@ -38,9 +38,7 @@ async def update_scheme(scheme_id: str, data_update: CreatePTSchemeModel, sessio
     if update_result is None:
         raise PTSChemeNotFound()
     updated_scheme, category_name = update_result
-    response_data = updated_scheme.model_dump()
-    response_data["category_name"] = category_name
-    return PTSchemeWithCategoryModel.model_validate(response_data)
+    return PTSchemeWithCategoryModel(**updated_scheme.model_dump(), category_name=category_name)
 
 @pt_scheme_route.delete("/{scheme_id}")
 async def delete_scheme(scheme_id: str, session: SessionDep):

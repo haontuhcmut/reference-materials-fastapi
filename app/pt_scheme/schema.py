@@ -16,7 +16,7 @@ class PTSchemeWithCategoryModel(BaseModel):
     id: UUID
     pt_scheme_code: str
     name: str = Field(alias="pt_name")
-    category_name: str
+    category_name: str | None
     year: int
     analytes: str
 

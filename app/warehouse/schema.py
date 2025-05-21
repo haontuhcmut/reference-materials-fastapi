@@ -10,3 +10,14 @@ class CreateWarehouseModel(BaseModel):
 
 class WarehouseModel(CreateWarehouseModel):
     id: UUID
+
+
+class InventoryBase(BaseModel):
+    product_code: str | None
+    product_name: str | None
+    material_code: str | None
+    product_name: str | None
+    quantity: float
+
+class WarehouseDetailModel(WarehouseModel):
+    inventories: list[InventoryBase]

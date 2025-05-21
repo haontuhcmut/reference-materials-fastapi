@@ -7,7 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.db.model import PTScheme, Category
 from app.pt_scheme.schema import CreatePTSchemeModel, PTSchemeWithCategoryModel
 from app.error import PTSchemeAlreadyExist, InvalidIDFormat
-
+from app.utility.main import check_fk_exists
 
 class PTSchemeService:
 
@@ -20,13 +20,14 @@ class PTSchemeService:
 
         result = await session.exec(statement)
         pt_schemes = result.all()
-        pt_schemes_response = [
+        data_response = [
             PTSchemeWithCategoryModel(
-                **scheme.model_dump(), category_name=scheme.category.name
+                **scheme.model_dump(),
+                category_name=scheme.category.name if scheme.category else None
             )
             for scheme in pt_schemes
         ]
-        return pt_schemes_response
+        return data_response
 
     async def get_scheme_item(self, scheme_id: str, session: AsyncSession):
         try:
@@ -49,25 +50,24 @@ class PTSchemeService:
     async def create_scheme(
         self, scheme_data: CreatePTSchemeModel, session: AsyncSession
     ):
-        data_dict = scheme_data.model_dump()
-        scheme_exist = (
-            await session.exec(
-                select(PTScheme).where(
-                    PTScheme.pt_scheme_code == data_dict["pt_scheme_code"]
-                )
-            )
-        ).first()
-        if scheme_exist is not None:
+        category = await check_fk_exists(
+            model=Category,
+            id_value=scheme_data.category_id,
+            field_name="Category",
+            session=session
+        )
+
+        statement = select(PTScheme).where(PTScheme.pt_scheme_code == scheme_data.pt_scheme_code)
+        result = await session.exec(statement)
+        scheme = result.first()
+        if scheme is not None:
             raise PTSchemeAlreadyExist()
+
+        data_dict = scheme_data.model_dump()
         new_scheme = PTScheme(**data_dict)
         session.add(new_scheme)
-        category_name = (
-            await session.exec(
-                select(Category.name).where(Category.id == data_dict["category_id"])
-            )
-        ).first()
         await session.commit()
-        return new_scheme.model_dump(), category_name
+        return new_scheme, category.name
 
     async def update_scheme(
         self, scheme_id: str, data_update: CreatePTSchemeModel, session: AsyncSession
@@ -77,13 +77,8 @@ class PTSchemeService:
         except ValueError:
             raise InvalidIDFormat()
 
-        scheme = await session.get(PTScheme, scheme_uuid)
-        if scheme is None:
-            return None
-
-        category = await session.get(Category, data_update.category_id)
-        if category is None:
-            return None
+        scheme = await check_fk_exists(PTScheme, scheme_uuid, "PT scheme", session)
+        category = await check_fk_exists(Category, data_update.category_id, "Category", session)
 
         if scheme.pt_scheme_code != data_update.pt_scheme_code:
             existing_scheme = (
@@ -91,7 +86,7 @@ class PTSchemeService:
                     select(PTScheme)
                     .where(
                         PTScheme.pt_scheme_code == data_update.pt_scheme_code,
-                        PTScheme.id != scheme_id
+                        PTScheme.id != scheme_uuid
                     )
                 )
             ).first()

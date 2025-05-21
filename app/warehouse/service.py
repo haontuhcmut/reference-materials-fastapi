@@ -1,9 +1,11 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from uuid import UUID
+from sqlalchemy.orm import selectinload
 
-from app.db.model import Warehouse
+from app.db.model import Warehouse, Inventory
 from app.warehouse.schema import CreateWarehouseModel
+from app.error import InvalidIDFormat
 
 class WarehouseService:
     async def get_all_warehouse(self, session: AsyncSession):
@@ -13,11 +15,28 @@ class WarehouseService:
         return warehouse
 
     async def get_warehouse_item(self, warehouse_id: str, session: AsyncSession):
-        warehouse_uuid = UUID(warehouse_id)
-        statement = select(Warehouse).where(Warehouse.id == warehouse_uuid)
-        result = await session.exec(statement)
-        warehouse = result.first()
+        try:
+            warehouse_uuid = UUID(warehouse_id)
+        except ValueError:
+            raise InvalidIDFormat()
+        warehouse = await session.get(Warehouse, warehouse_uuid)
         return warehouse
+
+    async def get_warehouse_detail(self, warehouse_id: str, session: AsyncSession):
+        try:
+            warehouse_uuid = UUID(warehouse_id)
+        except ValueError:
+            raise InvalidIDFormat()
+        statement = (select(Warehouse)
+                     .where(Warehouse.id == warehouse_uuid)
+                     .options(selectinload(Warehouse.inventories).selectinload(Inventory.product),
+                                              selectinload(Warehouse.inventories).selectinload(Inventory.material)))
+        result = await session.exec(statement)
+        warehouse_detail = result.first()
+        if warehouse is None:
+            return None
+        warehouse, inventories = warehouse_detail
+        return warehouse, inventories
 
     async def create_warehouse(self, warehouse_data: CreateWarehouseModel, session: AsyncSession):
         data_dict = warehouse_data.model_dump()

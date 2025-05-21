@@ -30,9 +30,6 @@ class CategoryService:
         self, category_data: CreateCategoryModel, session: AsyncSession
     ):
         data_dict = category_data.model_dump()
-
-
-
         category_exist = (
             await session.exec(
                 select(Category).where(Category.name == data_dict["name"])
