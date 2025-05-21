@@ -28,6 +28,7 @@ class Product(SQLModel, table=True):
     pt_scheme_id: UUID | None = Field(default=None, foreign_key="pt_scheme.id")
     product_code: str = Field(default=None, max_length=32, nullable=False, unique=True)
     name: str = Field(default=None, max_length=128)
+    unit: str = Field(default=None, max_length=32)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
     pt_scheme: PTScheme | None = Relationship(back_populates="products")
@@ -50,6 +51,7 @@ class Material(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
     material_code: str = Field(default=None, max_length=32, nullable=False, unique=True)
     name: str = Field(default=None, max_length=128, nullable=False)
+    unit: str = Field(default=None, max_length=32)
     detailed_info: str | None = Field(default=None, max_length=1028)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 

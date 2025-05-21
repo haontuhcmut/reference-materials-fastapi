@@ -17,12 +17,15 @@ async def get_all_scheme(_params: Annotated[Params, Depends()], session: Session
     pt_scheme = await pt_scheme_service.get_all_pt_scheme(session)
     return paginate(pt_scheme)
 
-@pt_scheme_route.get("/{scheme_id}", response_model=PTSchemeWithCategoryModel) #response_model=PTSchemeWithCategoryModel)
+@pt_scheme_route.get("/{scheme_id}", response_model=PTSchemeWithCategoryModel)
 async def get_scheme_item(scheme_id: str, session: SessionDep):
-    scheme_item, category_name = await pt_scheme_service.get_scheme_item(scheme_id, session)
-    if scheme_item is None:
+    result = await pt_scheme_service.get_scheme_item(scheme_id, session)
+    if result is None:
         raise PTSChemeNotFound()
-    return PTSchemeWithCategoryModel(**scheme_item.model_dump(), category_name=category_name)
+    scheme_id, category_name = result
+    response_data = scheme_id.model_dump()
+    response_data["category_name"] = category_name
+    return PTSchemeWithCategoryModel.model_validate(response_data)
 
 @pt_scheme_route.post("/", response_model=PTSchemeWithCategoryModel)
 async def create_scheme(scheme_data: CreatePTSchemeModel, session: SessionDep):
@@ -31,11 +34,13 @@ async def create_scheme(scheme_data: CreatePTSchemeModel, session: SessionDep):
 
 @pt_scheme_route.put("/{scheme_id}", response_model=PTSchemeWithCategoryModel)
 async def update_scheme(scheme_id: str, data_update: CreatePTSchemeModel, session: SessionDep):
-    result = await pt_scheme_service.update_scheme(scheme_id, data_update, session)
-    if result is None:
+    update_result = await pt_scheme_service.update_scheme(scheme_id, data_update, session)
+    if update_result is None:
         raise PTSChemeNotFound()
-    updated_scheme, category_name = result
-    return PTSchemeWithCategoryModel(**updated_scheme, category_name=category_name)
+    updated_scheme, category_name = update_result
+    response_data = updated_scheme.model_dump()
+    response_data["category_name"] = category_name
+    return PTSchemeWithCategoryModel.model_validate(response_data)
 
 @pt_scheme_route.delete("/{scheme_id}")
 async def delete_scheme(scheme_id: str, session: SessionDep):

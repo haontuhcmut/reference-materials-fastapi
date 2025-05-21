@@ -7,6 +7,7 @@ class CreateProductModel(BaseModel):
     pt_scheme_id: UUID
     product_code: str = Field(default=None, max_length=32)
     name: str = Field(default="PT sample", max_length=128)
+    unit: str = Field(default="vial", max_length=32)
 
 class ProductModel(CreateProductModel):
     id: UUID
@@ -18,7 +19,8 @@ class ProductModelResponse(BaseModel):
     pt_name: str
     analytes: str
     product_code: str
-    name: str = Field(alias="sample_name")
+    name: str | None = Field(alias="sample_name")
+    unit: str
     created_at: datetime
 
     model_config = ConfigDict(validate_by_name=True, validate_by_alias=True) #Fill origin name, but output alias name

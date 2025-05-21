@@ -99,8 +99,8 @@ def register_all_errors(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
-                "message": "Category already exist",
-                "error_code": "category_already_exist",
+                "message": "Category name already exist",
+                "error_code": "category_name_already_exist",
             },
         ),
     )
@@ -121,8 +121,8 @@ def register_all_errors(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
-                "message": "PT scheme already exist",
-                "error_code": "pt_scheme_already_exists",
+                "message": "PT scheme code already exist",
+                "error_code": "pt_scheme_code_already_exists",
             },
         ),
     )

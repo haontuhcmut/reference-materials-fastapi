@@ -3,12 +3,14 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
 
+
 from app.db.model import PTScheme, Category
 from app.pt_scheme.schema import CreatePTSchemeModel, PTSchemeWithCategoryModel
-from app.error import PTSchemeAlreadyExist, CategoryNotFound, InvalidIDFormat
+from app.error import PTSchemeAlreadyExist, InvalidIDFormat
 
 
 class PTSchemeService:
+
     async def get_all_pt_scheme(self, session: AsyncSession):
         statement = (
             select(PTScheme)
@@ -70,45 +72,45 @@ class PTSchemeService:
     async def update_scheme(
         self, scheme_id: str, data_update: CreatePTSchemeModel, session: AsyncSession
     ):
-        # Check pt_schem id
-        result = await self.get_scheme_item(scheme_id, session)
-        if result is None:
+        try:
+            scheme_uuid = UUID(scheme_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
+        scheme = await session.get(PTScheme, scheme_uuid)
+        if scheme is None:
             return None
 
-        scheme_to_update, _ = result
-        if scheme_to_update is None:
-            return None
-
-        # pt_scheme field already exists
-        pt_scheme_exist = (
-            await session.exec(
-                select(PTScheme).where(
-                    PTScheme.pt_scheme_code == data_update.pt_scheme_code
-                )
-            )
-        ).first()
-        if pt_scheme_exist is not None:
-            raise PTSchemeAlreadyExist()
-
-        # Check category field
-        category = (
-            await session.exec(
-                select(Category).where(Category.id == data_update.category_id)
-            )
-        ).first()
+        category = await session.get(Category, data_update.category_id)
         if category is None:
-            raise CategoryNotFound()
+            return None
 
-        # updating
-        data_dict = data_update.model_dump()
-        for key, value in data_dict.items():
-            setattr(scheme_to_update, key, value)
+        if scheme.pt_scheme_code != data_update.pt_scheme_code:
+            existing_scheme = (
+                await session.exec(
+                    select(PTScheme)
+                    .where(
+                        PTScheme.pt_scheme_code == data_update.pt_scheme_code,
+                        PTScheme.id != scheme_id
+                    )
+                )
+            ).first()
+            if existing_scheme:
+                raise PTSchemeAlreadyExist()
+        for key, value in data_update.model_dump(exclude_unset=True).items():
+            setattr(scheme, key, value)
+
         await session.commit()
-        category_name = category.name
-        return scheme_to_update.model_dump(), category_name
+        return scheme, category.name
+
 
     async def delete_scheme(self, scheme_id: str, session: AsyncSession):
-        scheme_to_delete = await self.get_scheme_item(scheme_id, session)
+        try:
+            scheme_uuid = UUID(scheme_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
+        scheme_to_delete = await session.get(PTScheme, scheme_uuid)
         if scheme_to_delete is not None:
             await session.delete(scheme_to_delete)
             await session.commit()

@@ -67,7 +67,8 @@ class ProductService:
                 for bom in product.bill_of_materials
                 if bom.material
             ],
-            "quantity": product.inventory.quantity if product.inventory else 0.0
+            "quantity": product.inventory.quantity if product.inventory else 0.0,
+            "unit": product.unit
         }
 
         return ProductItemDetailResponse.model_validate(response_data)
@@ -81,7 +82,16 @@ class ProductService:
         return new_product
 
     async def update_product(self, product_id: str, data_update: CreateProductModel, session: AsyncSession):
-        product_to_update = await self.get_product_item(product_id, session)
+        try:
+            product_uuid = UUID(product_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
+        product_code_exist = (await session.exec(select(Product.product_code == data_update.product_code))).first()
+        if product_code_exist:
+            raise
+
+        product_to_update = (await session.exec(select(Product).where(Product.id == product_uuid))).first()
         if product_to_update is not None:
             data_dict = data_update.model_dump()
             for key, value in data_dict.items():
