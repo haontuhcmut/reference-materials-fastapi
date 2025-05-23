@@ -32,11 +32,12 @@ class WarehouseService:
                      .options(selectinload(Warehouse.inventories).selectinload(Inventory.product),
                                               selectinload(Warehouse.inventories).selectinload(Inventory.material)))
         result = await session.exec(statement)
-        warehouse_detail = result.first()
+        warehouse = result.first()
+
         if warehouse is None:
             return None
-        warehouse, inventories = warehouse_detail
-        return warehouse, inventories
+
+        return warehouse, warehouse.inventories
 
     async def create_warehouse(self, warehouse_data: CreateWarehouseModel, session: AsyncSession):
         data_dict = warehouse_data.model_dump()
