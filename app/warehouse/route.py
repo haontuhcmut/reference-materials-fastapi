@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 from fastapi_pagination import Page, Params, paginate
 from typing import Annotated
 
-from app.warehouse.schema import CreateWarehouseModel, WarehouseModel
+from app.warehouse.schema import CreateWarehouseModel, WarehouseModel, WarehouseDetailModel
 from app.warehouse.service import WarehouseService
 from app.error import WarehouseNotFound
 from app.db.dependency import SessionDep
@@ -16,9 +16,9 @@ async def get_all_warehouse(_params: Annotated[Params, Depends()], session: Sess
     warehouse = await warehouse_service.get_all_warehouse(session)
     return paginate(warehouse)
 
-@warehouse_route.get("/{warehouse_id}")
+@warehouse_route.get("/{warehouse_id}", response_model=WarehouseModel)
 async def get_warehouse_detail(warehouse_id: str, session: SessionDep):
-    warehouse = await warehouse_service.get_warehouse_detail(warehouse_id, session)
+    warehouse = await warehouse_service.get_warehouse_item(warehouse_id, session)
     if warehouse is None:
         raise WarehouseNotFound()
     return warehouse

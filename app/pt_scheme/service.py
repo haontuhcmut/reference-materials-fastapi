@@ -6,7 +6,7 @@ from sqlalchemy.orm import selectinload
 
 from app.db.model import PTScheme, Category
 from app.pt_scheme.schema import CreatePTSchemeModel, PTSchemeWithCategoryModel
-from app.error import PTSchemeAlreadyExist, InvalidIDFormat
+from app.error import PTSchemeAlreadyExist, InvalidIDFormat, CategoryNotFound, PTSChemeNotFound
 from app.utility.main import check_fk_exists
 
 class PTSchemeService:
@@ -50,13 +50,9 @@ class PTSchemeService:
     async def create_scheme(
         self, scheme_data: CreatePTSchemeModel, session: AsyncSession
     ):
-        category = await check_fk_exists(
-            model=Category,
-            id_value=scheme_data.category_id,
-            field_name="Category",
-            session=session
-        )
-
+        category = await session.get(Category, scheme_data.category_id)
+        if category is None:
+            CategoryNotFound()
         statement = select(PTScheme).where(PTScheme.pt_scheme_code == scheme_data.pt_scheme_code)
         result = await session.exec(statement)
         scheme = result.first()
@@ -77,9 +73,16 @@ class PTSchemeService:
         except ValueError:
             raise InvalidIDFormat()
 
-        scheme = await check_fk_exists(PTScheme, scheme_uuid, "PT scheme", session)
-        category = await check_fk_exists(Category, data_update.category_id, "Category", session)
+        #uuid checking
+        scheme = await session.get(PTScheme, scheme_uuid)
+        if scheme is None:
+            PTSChemeNotFound()
 
+        category = await session.get(Category, data_update.category_id)
+        if category is None:
+            CategoryNotFound()
+
+        # unique checking
         if scheme.pt_scheme_code != data_update.pt_scheme_code:
             existing_scheme = (
                 await session.exec(

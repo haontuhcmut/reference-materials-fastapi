@@ -2,6 +2,7 @@ from fastapi import HTTPException, status
 from sqlmodel.ext.asyncio.session import AsyncSession
 from typing import Any
 from uuid import UUID
+from sqlmodel import select
 
 async def check_fk_exists(
     model: Any,
