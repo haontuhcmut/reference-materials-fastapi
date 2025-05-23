@@ -13,11 +13,11 @@ class Category(SQLModel, table=True):
 class PTScheme(SQLModel, table=True):
     __tablename__ = "pt_scheme"
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    category_id: UUID | None = Field(default=None, foreign_key="category.id")
+    category_id: UUID = Field(default=None, foreign_key="category.id")
     pt_scheme_code: str = Field(default=None, max_length=32, nullable=False, unique=True)
     name: str = Field(default=None, max_length=128, nullable=False)
-    year: int | None = Field(default=None, ge=1900, le=2100)
-    analytes: str | None = Field(default=None, max_length=128)
+    year: int = Field(default=None, ge=1900, le=2100)
+    analytes: str = Field(default=None, max_length=128)
 
     category: Category | None = Relationship(back_populates="pt_schemes")
     products: list["Product"] = Relationship(back_populates="pt_scheme")
@@ -25,7 +25,7 @@ class PTScheme(SQLModel, table=True):
 
 class Product(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
-    pt_scheme_id: UUID | None = Field(default=None, foreign_key="pt_scheme.id")
+    pt_scheme_id: UUID = Field(default=None, foreign_key="pt_scheme.id")
     product_code: str = Field(default=None, max_length=32, nullable=False, unique=True)
     name: str = Field(default=None, max_length=128)
     unit: str = Field(default=None, max_length=32)

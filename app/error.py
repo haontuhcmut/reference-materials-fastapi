@@ -44,6 +44,10 @@ class ProductNotFound(ExceptionRegister):
     pass
 
 
+class ProductAlreadyExist(ExceptionRegister):
+    """Product already exist"""
+
+
 class BomNotFound(ExceptionRegister):
     """Bill of material not found"""
 
@@ -87,10 +91,7 @@ def register_all_errors(app: FastAPI):
         InvalidIDFormat,
         create_exception_handler(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail={
-                "message": "Invalid ID format",
-                "error_code": "invalid_id_format"
-            },
+            detail={"message": "Invalid ID format", "error_code": "invalid_id_format"},
         ),
     )
 
@@ -122,7 +123,7 @@ def register_all_errors(app: FastAPI):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={
                 "message": "PT scheme code already exist",
-                "error_code": "pt_scheme_code_already_exists",
+                "error_code": "pt_scheme_code_already_exist",
             },
         ),
     )
@@ -132,6 +133,17 @@ def register_all_errors(app: FastAPI):
         create_exception_handler(
             status_code=status.HTTP_404_NOT_FOUND,
             detail={"message": "Product not found", "error_code": "product_not_found"},
+        ),
+    )
+
+    app.add_exception_handler(
+        ProductAlreadyExist,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Product already exist",
+                "error_code": "product_already_exist",
+            },
         ),
     )
 

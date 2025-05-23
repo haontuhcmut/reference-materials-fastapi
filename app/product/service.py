@@ -6,7 +6,7 @@ from uuid import UUID
 
 from app.db.model import Product, Category, PTScheme, BillOfMaterial
 from app.product.schema import CreateProductModel, ProductModelResponse, ProductItemDetailResponse, MaterialNameBase
-from app.error import InvalidIDFormat, ProductNotFound
+from app.error import InvalidIDFormat, ProductNotFound, ProductAlreadyExist
 
 
 class ProductService:
@@ -73,8 +73,16 @@ class ProductService:
 
         return ProductItemDetailResponse.model_validate(response_data)
 
+    async def get_from_product_code(self, product_code: str, session:AsyncSession):
+        statement = select(Product).where(Product.product_code == product_code)
+        result = await session.exec(statement)
+        product = result.first()
+        return product
 
     async def create_product(self, product_data: CreateProductModel, session: AsyncSession):
+        product_code_exist = await self.get_from_product_code(product_data.product_code, session)
+        if product_code_exist is not None:
+            raise ProductAlreadyExist()
         data_dict = product_data.model_dump()
         new_product = Product(**data_dict)
         session.add(new_product)
@@ -87,17 +95,21 @@ class ProductService:
         except ValueError:
             raise InvalidIDFormat()
 
-        product_code_exist = (await session.exec(select(Product.product_code == data_update.product_code))).first()
-        if product_code_exist:
-            raise
+        product_code_exist = await self.get_from_product_code(data_update.product_code, session)
 
-        product_to_update = (await session.exec(select(Product).where(Product.id == product_uuid))).first()
+        if product_code_exist:
+            raise ProductAlreadyExist()
+        statement = select(Product).where(Product.id == product_uuid)
+        result = await session.exec(statement)
+        product_to_update = result.first()
+
         if product_to_update is not None:
             data_dict = data_update.model_dump()
             for key, value in data_dict.items():
                 setattr(product_to_update, key, value)
             await session.commit()
             return product_to_update
+
         return None
 
     async def delete_product(self, product_id: str, session: AsyncSession):
