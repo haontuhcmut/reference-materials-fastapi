@@ -7,7 +7,6 @@ from sqlalchemy.orm import selectinload
 from app.db.model import PTScheme, Category
 from app.pt_scheme.schema import CreatePTSchemeModel, PTSchemeWithCategoryModel
 from app.error import PTSchemeAlreadyExist, InvalidIDFormat, CategoryNotFound, PTSChemeNotFound
-from app.utility.main import check_fk_exists
 
 class PTSchemeService:
 

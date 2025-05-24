@@ -60,6 +60,12 @@ class MaterialNotFound(ExceptionRegister):
     pass
 
 
+class MaterialAlreadyExist(ExceptionRegister):
+    """Material already exist"""
+
+    pass
+
+
 class WarehouseNotFound(ExceptionRegister):
     """Warehouse not found"""
 
@@ -165,6 +171,17 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "Material not found",
                 "error_code": "material_not_found",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        MaterialAlreadyExist,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Material already exist",
+                "error_code": "material_already_code",
             },
         ),
     )

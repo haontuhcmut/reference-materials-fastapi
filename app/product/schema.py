@@ -5,9 +5,9 @@ from uuid import UUID
 
 class CreateProductModel(BaseModel):
     pt_scheme_id: UUID
-    product_code: str = Field(default=None, max_length=32)
-    name: str = Field(default="PT sample", max_length=128)
-    unit: str = Field(default="vial", max_length=32)
+    product_code: str = Field( max_length=32)
+    name: str = Field(max_length=128)
+    unit: str = Field(max_length=32)
 
 class ProductModel(CreateProductModel):
     id: UUID

@@ -17,7 +17,7 @@ description = """
 A REST API for a Reference Material Product Management Systems web service.
 
 This REST API is able to:
-- Create CRUD,...
+- Create product and inventory management
 """
 
 version_prefix = Config.VERSION

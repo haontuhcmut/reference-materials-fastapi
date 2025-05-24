@@ -1,32 +1,109 @@
+from itertools import product
 from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel import select
+from sqlmodel import select, desc
+from sqlalchemy.orm import selectinload
 
-from app.db.model import BillOfMaterial
-from app.bom.schema import CreateBomModel
+from app.db.model import BillOfMaterial, Product, Material
+from app.bom.schema import (
+    CreateBomModel,
+    BomModelResponse,
+    MaterialBase,
+    BomDetailModelResponse,
+)
+from app.error import ProductNotFound, MaterialNotFound, InvalidIDFormat
+
 
 class BomService:
     async def get_all_bom(self, session: AsyncSession):
-        statement = select(BillOfMaterial)
+        statement = (
+            select(BillOfMaterial)
+            .options(
+                selectinload(BillOfMaterial.product),
+                selectinload(BillOfMaterial.material),
+            )
+            .join(BillOfMaterial.product)
+            .order_by(desc(Product.created_at))  # Order by Product's created_at
+        )
         results = await session.exec(statement)
         bom = results.all()
-        return bom
+        data_response = [
+            BomModelResponse(
+                id=bom_item.id,
+                product_id=bom_item.product.id,
+                product_code=bom_item.product.product_code,
+                material_id=bom_item.material.id,
+                material_code=bom_item.material.material_code,
+            )
+            for bom_item in bom
+        ] or []
+        return data_response
 
     async def get_bom_item(self, bom_id: str, session: AsyncSession):
-        bom_uuid = UUID(bom_id)
-        statement = select(BillOfMaterial).where(BillOfMaterial.id == bom_uuid)
-        result = await session.exec(statement)
-        bom = result.first()
+        try:
+            bom_uuid = UUID(bom_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
+        bom = await session.get(BillOfMaterial, bom_uuid)
+        if bom is None:
+            raise None
         return bom
 
+    async def get_bom_from_product_id(self, product_id: str, session: AsyncSession):
+        try:
+            product_uuid = UUID(product_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
+        statement = (
+            select(BillOfMaterial)
+            .where(BillOfMaterial.product_id == product_uuid)
+            .options(
+                selectinload(BillOfMaterial.product),
+                selectinload(BillOfMaterial.material),
+            )
+        )
+        result = await session.exec(statement)
+        bom_items = result.all()
+
+        if not bom_items:
+            return None
+
+        data_response = [
+            BomDetailModelResponse(
+                id=bom.id,
+                product_id=bom.product_id,
+                material_id=bom.material_id,
+                quantity_per_product=bom.quantity_per_product,
+                unit_per_product=bom.unit_per_product,
+                product_code=bom.product.product_code,
+                product_name=bom.product.name,
+                material_code=bom.material.material_code,
+                material_name=bom.material.name,
+            )
+            for bom in bom_items
+        ]
+        return data_response
+
     async def create_bom_item(self, bom_data: CreateBomModel, session: AsyncSession):
+        existing_product = await session.get(Product, bom_data.product_id)
+        if existing_product is None:
+            raise ProductNotFound()
+
+        existing_material = await session.get(Material, bom_data.material_id)
+        if existing_material is None:
+            raise MaterialNotFound()
+
         data_dict = bom_data.model_dump()
         new_bom = BillOfMaterial(**data_dict)
         session.add(new_bom)
         await session.commit()
         return new_bom
 
-    async def update_bom(self, bom_id: str, data_update: CreateBomModel, session: AsyncSession):
+    async def update_bom(
+        self, bom_id: str, data_update: CreateBomModel, session: AsyncSession
+    ):
         bom_to_update = await self.get_bom_item(bom_id, session)
         if bom_to_update is not None:
             data_dict = data_update.model_dump()

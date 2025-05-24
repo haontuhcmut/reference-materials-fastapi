@@ -1,21 +1,23 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
+from fastapi_pagination import Page, Params, paginate
+from typing import Annotated
 
 from app.material.service import MaterialService
 from app.error import MaterialNotFound
-from app.material.schema import CreateMaterialModel, MaterialModel
+from app.material.schema import CreateMaterialModel, MaterialModel, MaterialDetailResponse
 from app.db.dependency import SessionDep
 
 material_service = MaterialService()
 material_route = APIRouter()
 
 
-@material_route.get("/", response_model=list[MaterialModel])
-async def get_all_material(session: SessionDep):
+@material_route.get("/", response_model=Page[MaterialModel])
+async def get_all_material(_params: Annotated[Params, Depends()], session: SessionDep):
     material = await material_service.get_all_material(session)
-    return material
+    return paginate(material)
 
-@material_route.get("/{material_id}", response_model=MaterialModel)
+@material_route.get("/{material_id}", response_model=MaterialDetailResponse)
 async def get_material_item(material_id: str, session: SessionDep):
     material = await material_service.get_material_item(material_id, session)
     if material is None:
@@ -36,7 +38,7 @@ async def update_material(material_id: str, data_update: CreateMaterialModel, se
 
 @material_route.delete("/{material_id}", response_model=MaterialModel)
 async def delete_material(material_id: str, session: SessionDep):
-    deleted_material = await material_service.delte_material(material_id, session)
+    deleted_material = await material_service.delete_material(material_id, session)
     if deleted_material is None:
         raise MaterialNotFound()
     return JSONResponse(

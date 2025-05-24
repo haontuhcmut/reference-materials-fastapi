@@ -4,10 +4,10 @@ from uuid import UUID
 
 class CreatePTSchemeModel(BaseModel):
     category_id: UUID
-    pt_scheme_code: str = Field(default=None, max_length=32)
-    name: str = Field(default=" Food Microbiology (QMS)", max_length=128)
-    year: int | None = Field(default=None, ge=1900, le=2100)
-    analytes: str | None = Field(default="Detection of Salmonella species", max_length=128)
+    pt_scheme_code: str = Field(max_length=32)
+    name: str = Field(max_length=128)
+    year: int = Field(ge=1900, le=2100)
+    analytes: str = Field(max_length=128)
 
 class PTSchemeModel(CreatePTSchemeModel):
     id: UUID
