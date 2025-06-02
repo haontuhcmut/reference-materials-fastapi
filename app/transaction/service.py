@@ -11,6 +11,7 @@ from app.db.model import (
     Material,
     Warehouse,
 )
+from app.error import InvalidIDFormat
 
 from app.transaction.schema import (
     TransactionType,
@@ -28,10 +29,12 @@ class TransactionService:
         return transactions
 
     async def get_transaction_item(self, transaction_id: str, session: AsyncSession):
-        transaction_uuid = UUID(transaction_id)
-        statement = select(Transaction).where(Transaction.id == transaction_uuid)
-        result = await session.exec(statement)
-        transaction = result.first()
+        try:
+            transaction_uuid = UUID(transaction_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
+        transaction = await session.get(Transaction, transaction_uuid)
         return transaction
 
     async def create_transaction_detail(

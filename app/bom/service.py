@@ -11,7 +11,7 @@ from app.bom.schema import (
     MaterialBase,
     BomDetailModelResponse,
 )
-from app.error import ProductNotFound, MaterialNotFound, InvalidIDFormat
+from app.error import ProductNotFound, MaterialNotFound, InvalidIDFormat, BomNotFound
 
 
 class BomService:
@@ -104,16 +104,36 @@ class BomService:
     async def update_bom(
         self, bom_id: str, data_update: CreateBomModel, session: AsyncSession
     ):
+        try:
+            bom_uuid = UUID(bom_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
         bom_to_update = await self.get_bom_item(bom_id, session)
-        if bom_to_update is not None:
-            data_dict = data_update.model_dump()
-            for key, value in data_dict.items():
-                setattr(bom_to_update, key, value)
-            await session.commit()
-            return bom_to_update
-        return None
+
+        if bom_to_update is None:
+            raise BomNotFound()
+
+        product = await session.get(Product, data_update.product_id)
+        if product is None:
+            raise ProductNotFound()
+
+        material = await session.get(Material, data_update.material_id)
+        if material is None:
+            raise MaterialNotFound()
+
+        for key, value in data_update.model_dump(exclude_unset=True).items():
+            setattr(bom_to_update, key, value)
+        await session.commit()
+        return bom_to_update
+
 
     async def delete_bom(self, bom_id: str, session: AsyncSession):
+        try:
+            bom_uuid = UUID(bom_id)
+        except ValueError:
+            raise InvalidIDFormat()
+
         bom_to_delete = await self.get_bom_item(bom_id, session)
         if bom_to_delete is not None:
             await session.delete(bom_to_delete)

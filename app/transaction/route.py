@@ -1,5 +1,6 @@
-from fastapi import APIRouter
-from typing import Any
+from fastapi import APIRouter, Depends
+from fastapi_pagination import Page, Params, paginate
+from typing import Annotated
 
 from app.db.dependency import SessionDep
 from app.transaction.service import TransactionService
@@ -10,10 +11,10 @@ transaction_service = TransactionService()
 transaction_route = APIRouter()
 
 
-@transaction_route.get("/", response_model=list[TransactionModel])
-async def get_all_transaction(session: SessionDep):
+@transaction_route.get("/", response_model=Page[TransactionModel])
+async def get_all_transaction(_params: Annotated[Params, Depends()], session: SessionDep):
     transactions = await transaction_service.get_all_transactions(session)
-    return transactions
+    return paginate(transactions)
 
 @transaction_route.get("/{transaction_id}", response_model=TransactionModel)
 async def get_transaction_item(transaction_id: str, session: SessionDep):

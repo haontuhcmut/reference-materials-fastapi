@@ -3,6 +3,16 @@ from datetime import datetime, timezone, date
 from typing import Optional
 from sqlmodel import SQLModel, Field, Relationship
 
+class User(SQLModel, table=True):
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    email: str = Field(default=None, unique=True, index=True)
+    username: str = Field(default=None, unique=True)
+    last_name: str = Field(default=None, max_length=32)
+    first_name: str = Field(default=None, max_length=32)
+    hashed_password: str = Field(default=None, exclude=True) #Do not response
+    is_verified: bool = Field(default=False)
+    role: str = Field(default="user", max_length=32, nullable=False)
+
 
 class Category(SQLModel, table=True):
     id: UUID = Field(default_factory=uuid4, primary_key=True)
