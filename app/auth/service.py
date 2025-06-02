@@ -1,19 +1,30 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from fastapi.templating import Jinja2Templates
+from fastapi import status
+from fastapi.responses import JSONResponse
 
 from app.auth.schema import CreateUserModel
 from app.config import Config
 from app.db.model import User
 from app.error import EmailAlreadyExist, UsernameAlreadyExist, UseNotFound
-from app.utility.security import encode_url_safe_token, get_hashed_password, decode_url_safe_token
+from app.utility.security import (
+    encode_url_safe_token,
+    get_hashed_password,
+    decode_url_safe_token,
+)
 from app.celery_task import send_email
 
-templates = Jinja2Templates(directory="app/html_template") #or can use Path from pathlib base_dir
+templates = Jinja2Templates(
+    directory="app/html_template"
+)  # or can use Path from pathlib base_dir
+
 
 class UserService:
 
-    async def existing_checker(self, field_check: str, value: str, session: AsyncSession):
+    async def get_user_by_field(
+        self, field_check: str, value: str, session: AsyncSession
+    ):
         statement = select(User).where(getattr(User, field_check) == value)
         result = await session.exec(statement)
         user = result.first()
@@ -28,24 +39,26 @@ class UserService:
         await session.commit()
         return new_user
 
-    async def update_user(self, user_data: dict, session: AsyncSession):
+    async def update_user(self, user: User, user_data: dict, session: AsyncSession):
         for key, value in user_data.items():
-            setattr(User, key, value)
+            setattr(user, key, value)
         await session.commit()
-        return User
+        return user
 
     async def signup_user(self, user_data: CreateUserModel, session: AsyncSession):
-        existing_email = await self.existing_checker("email", user_data.email, session)
+        existing_email = await self.get_user_by_field("email", user_data.email, session)
         if existing_email is not None:
             raise EmailAlreadyExist()
 
-        existing_username = await self.existing_checker("username", user_data.username, session)
+        existing_username = await self.get_user_by_field(
+            "username", user_data.username, session
+        )
         if existing_username:
             raise UsernameAlreadyExist()
 
         new_user = await self.create_user(user_data, session)
 
-        #Encoding url token
+        # Encoding url token
         token = encode_url_safe_token(
             {"email": user_data.email}
         )  # Using URLSafeTimedSerializer encode
@@ -54,7 +67,7 @@ class UserService:
             {"action_url": link, "first_name": user_data.first_name}
         )
 
-        #Email sending
+        # Email sending
         emails = [user_data.email]
         subject = "Verification your email"
         send_email.delay(emails, subject, html_content)
@@ -64,7 +77,16 @@ class UserService:
         token_data = decode_url_safe_token(token)
         user_email = token_data.get("email")
         if user_email:
-            user = await self.existing_checker("email", user_email, session)
+            user = await self.get_user_by_field("email", user_email, session)
             if not user:
                 raise UseNotFound()
-            await self.update_user()
+            await self.update_user(user, {"is_verified": True}, session)
+            return JSONResponse(
+                content={"message": "Account verified successfully"},
+                status_code=status.HTTP_200_OK,
+            )
+        return JSONResponse(
+            content={"message": "Error occurred during verification"},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
