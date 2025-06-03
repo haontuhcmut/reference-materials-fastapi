@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     VERSION: str
     SECRET_KEY: str
     SALT: str
+    ALGORITHM: str
+    ACCESS_TOKEN_EXPIRE_MINUTES: int
+    REFRESH_TOKEN_EXPIRE_DAYS: int
 
     MAIL_USERNAME: str
     MAIL_PASSWORD: str
@@ -28,6 +31,6 @@ Config = Settings()
 
 #Celery config
 broker_url = Config.BROKER_URL
-backend = Config.BACKEND_URL
+backend_url = Config.BACKEND_URL
 broker_connection_retry_on_startup = True
 

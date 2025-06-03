@@ -1,6 +1,9 @@
 import logging
 from itsdangerous import URLSafeSerializer
 from passlib.context import CryptContext
+from datetime import timedelta, timezone, datetime
+import uuid
+import jwt
 
 from app.config import Config
 
@@ -11,12 +14,19 @@ serialize = URLSafeSerializer(
     salt=Config.SALT,
 )
 
+
 def encode_url_safe_token(data: dict):
     token = serialize.dumps(data)
     return token
 
-def get_hashed_password(password):
-    return  pwd_context.hash(password)
+
+def get_hashed_password(password: str) -> str:
+    return pwd_context.hash(password)
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return pwd_context.verify(plain_password, hashed_password)
+
 
 def decode_url_safe_token(token: str):
     try:
@@ -26,5 +36,17 @@ def decode_url_safe_token(token: str):
         logging.error(str(e))
 
 
+def create_access_token(
+    user_data: dict, expire_delta: timedelta | None = None, refresh: bool = False
+):
+    payload = {"user": user_data}
+    if expire_delta:
+        expire = datetime.now(timezone.utc) + expire_delta
+    else:
+        expire = datetime.now(timezone.utc) + timedelta(minutes=15)
 
-
+    payload.update({"exp": expire, "jti": str(uuid.uuid4()), "refresh": refresh})
+    token = jwt.encode(
+        payload=payload, key=Config.SECRET_KEY, algorithm=Config.ALGORITHM
+    )
+    return token

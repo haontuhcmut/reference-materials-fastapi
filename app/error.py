@@ -14,6 +14,11 @@ class EmailAlreadyExist(ExceptionRegister):
 
     pass
 
+class IncorrectEmailOrPassword(ExceptionRegister):
+    """User has provided wrong email or password during login"""
+
+    pass
+
 class UsernameAlreadyExist(ExceptionRegister):
     """Username already exist"""
 
@@ -105,6 +110,19 @@ def register_all_errors(app: FastAPI):
                 "error_code": "email_already_exist"
             }
         )
+    )
+
+    app.add_exception_handler(
+        IncorrectEmailOrPassword,
+        create_exception_handler(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail={
+                "message": "Incorrect email or password",
+                "error_code": "incorrect_email_or_password"
+            }
+        )
+
+
     )
 
     app.add_exception_handler(

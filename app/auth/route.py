@@ -1,6 +1,6 @@
 from fastapi import APIRouter, status
 
-from app.auth.schema import CreateUserModel
+from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel
 from app.db.dependency import SessionDep
 from app.auth.service import UserService
 
@@ -20,5 +20,11 @@ async def create_user(user_data: CreateUserModel, session: SessionDep):
 
 @oauth_route.get("/verify/{token}")
 async def verify_user_account(token: str, session: SessionDep):
-    token_data = await user_service.verify_user_account(token, session)
-    return token_data
+    token_safe_url = await user_service.verify_user_account(token, session)
+    return token_safe_url
+
+
+@oauth_route.post("/login", response_model=TokenModel)
+async def user_login(login_data: UserLoginModel, session: SessionDep):
+    token_response = await user_service.login_user(login_data, session)
+    return token_response

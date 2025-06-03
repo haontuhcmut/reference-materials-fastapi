@@ -3,15 +3,18 @@ from sqlmodel import select
 from fastapi.templating import Jinja2Templates
 from fastapi import status
 from fastapi.responses import JSONResponse
+from datetime import timedelta
 
-from app.auth.schema import CreateUserModel
+from app.auth.schema import CreateUserModel, UserLoginModel, TokenModel
 from app.config import Config
 from app.db.model import User
-from app.error import EmailAlreadyExist, UsernameAlreadyExist, UseNotFound
+from app.error import EmailAlreadyExist, UsernameAlreadyExist, UseNotFound, IncorrectEmailOrPassword
 from app.utility.security import (
     encode_url_safe_token,
     get_hashed_password,
     decode_url_safe_token,
+    verify_password,
+    create_access_token,
 )
 from app.celery_task import send_email
 
@@ -89,4 +92,37 @@ class UserService:
             content={"message": "Error occurred during verification"},
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+    async def login_user(self, login_data: UserLoginModel, session: AsyncSession):
+        email = login_data.email
+        password = login_data.password
+
+        user = await self.get_user_by_field("email", email, session)
+
+        if user is not None:
+            password_valid = verify_password(password, user.hashed_password)
+            if password_valid:
+                access_token = create_access_token(
+                    user_data={
+                        "email": user.email,
+                        "user_id": str(user.id), #string type is required
+                        "role": user.role,
+                    },
+                    expire_delta=timedelta(Config.ACCESS_TOKEN_EXPIRE_MINUTES),
+                    refresh=False,
+                )
+
+                refresh_token = create_access_token(
+                    user_data={
+                        "email": user.email,
+                        "user_id": str(user.id), #string type is required
+                        "role": user.role,
+                    },
+                    refresh=True,
+                    expire_delta=timedelta(days=Config.REFRESH_TOKEN_EXPIRE_DAYS)
+                )
+
+                return TokenModel(access_token=access_token, refresh_token=refresh_token)
+
+        raise IncorrectEmailOrPassword()
 
