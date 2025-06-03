@@ -1,13 +1,19 @@
 import logging
+import uuid
+import jwt
+
+from jwt.exceptions import InvalidTokenError
 from itsdangerous import URLSafeSerializer
 from passlib.context import CryptContext
 from datetime import timedelta, timezone, datetime
-import uuid
-import jwt
+from typing import Annotated
+from fastapi.security import OAuth2PasswordBearer
+from fastapi import Depends, HTTPException, status
 
 from app.config import Config
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth_scheme = OAuth2PasswordBearer(tokenUrl="token")
 
 serialize = URLSafeSerializer(
     secret_key=Config.SECRET_KEY,
@@ -50,3 +56,10 @@ def create_access_token(
         payload=payload, key=Config.SECRET_KEY, algorithm=Config.ALGORITHM
     )
     return token
+
+# async def get_current_user(token: Annotated[str, Depends(oauth_scheme)]):
+#     credentials_exception = HTTPException(
+#         status_code=status.HTTP_401_UNAUTHORIZED,
+#         detail="Could not validate credentials",
+#         headers={"WWW-Authenticate": "Bearer"}
+#     )
