@@ -12,6 +12,7 @@ class Settings(BaseSettings):
     SALT: str
     ALGORITHM: str
     ACCESS_TOKEN_EXPIRE_MINUTES: int
+    JTI_EXPIRY_SECOND: int
     REFRESH_TOKEN_EXPIRE_DAYS: int
 
     MAIL_USERNAME: str

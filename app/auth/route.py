@@ -1,8 +1,10 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, status, Depends
+from typing import Annotated
 
-from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel
+from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel, UserModel
 from app.db.dependency import SessionDep
 from app.auth.service import UserService
+from app.auth.denpendency import get_current_user, RefreshTokenBearer
 
 
 user_service = UserService()
@@ -28,3 +30,9 @@ async def verify_user_account(token: str, session: SessionDep):
 async def user_login(login_data: UserLoginModel, session: SessionDep):
     token_response = await user_service.login_user(login_data, session)
     return token_response
+
+@oauth_route.get("/me", response_model=UserModel)
+async def get_current_user(user: Annotated[UserModel, Depends(get_current_user)]):
+    return user
+
+
