@@ -5,7 +5,7 @@ from fastapi import status
 from fastapi.responses import JSONResponse
 from datetime import timedelta
 
-from app.auth.schema import CreateUserModel, UserLoginModel, TokenModel
+from app.auth.schema import CreateUserModel, UserLoginModel, TokenModel, PasswordResetRequestModel
 from app.config import Config
 from app.db.model import User
 from app.error import EmailAlreadyExist, UsernameAlreadyExist, UseNotFound, IncorrectEmailOrPassword
@@ -126,3 +126,20 @@ class UserService:
 
         raise IncorrectEmailOrPassword()
 
+    async def password_reset_request(self, email: PasswordResetRequestModel, session: AsyncSession):
+        email = email.email
+        user = await self.get_user_by_field("email", email, session)
+        if user is None:
+            raise UseNotFound()
+        token = encode_url_safe_token({"email": email})
+        link = f"http://{Config.DOMAIN}/api/v1/auth/password-reset-confirm/{token}"
+        html_message = templates.get_template("password-reset.html").render(
+            {"action_url": link, "first_name": user.first_name}
+        )
+        emails = [email]
+        subject = "Reset your password"
+        send_email.delay(emails, subject, html_message)
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "Please check your email for instructions to reset your password"}
+        )

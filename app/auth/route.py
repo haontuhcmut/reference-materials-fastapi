@@ -1,13 +1,15 @@
 from fastapi import APIRouter, status, Depends
 from typing import Annotated
 from datetime import datetime
+from fastapi.responses import JSONResponse
 
-from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel, UserModel, AccessTokenModel, AccessTokenModel
+
+from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel, UserModel, AccessTokenModel, PasswordResetRequestModel
 from app.db.dependency import SessionDep
 from app.auth.service import UserService
-from app.auth.denpendency import get_current_user, RefreshTokenBearer
+from app.auth.denpendency import get_current_user, RefreshTokenBearer, AccessTokenBearer
 from app.utility.security import create_access_token
-
+from app.db.redis import add_jti_blocklist
 
 user_service = UserService()
 oauth_route = APIRouter()
@@ -37,10 +39,25 @@ async def user_login(login_data: UserLoginModel, session: SessionDep):
 async def get_current_user(user: Annotated[UserModel, Depends(get_current_user)]):
     return user
 
-@oauth_route.get("/refresh_token")
+@oauth_route.get("/refresh_token", response_model=AccessTokenModel)
 async def get_new_access_token(token_details: Annotated[dict, Depends(RefreshTokenBearer())]):
     exp_time = token_details["exp"]
 
     if datetime.fromtimestamp(exp_time) > datetime.now():
         new_access_token = create_access_token(token_details["user"])
         return AccessTokenModel(access_token=new_access_token)
+
+@oauth_route.get("/logout")
+async def revoke_token(token_detail: Annotated[dict, Depends(AccessTokenBearer())]):
+    jti = token_detail["jti"]
+    await add_jti_blocklist(jti)
+    return JSONResponse(
+        status_code=status.HTTP_200_OK,
+        content={"message": "Logged out successfully"}
+    )
+
+@oauth_route.post("/reset-password-request")
+async def password_reset_request(email: PasswordResetRequestModel, session: SessionDep):
+    user_to_reset_password = await user_service.password_reset_request(email, session)
+    return user_to_reset_password
+

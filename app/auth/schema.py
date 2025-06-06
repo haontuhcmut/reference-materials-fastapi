@@ -24,3 +24,6 @@ class UserModel(BaseModel):
     last_name: str
     first_name: str
     role: str
+
+class PasswordResetRequestModel(BaseModel):
+    email: str
