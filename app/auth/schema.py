@@ -27,3 +27,7 @@ class UserModel(BaseModel):
 
 class PasswordResetRequestModel(BaseModel):
     email: str
+
+class PasswordResetConfirm(BaseModel):
+    new_password: str = Field(max_length=32)
+    confirm_new_password: str = Field(max_length=32)

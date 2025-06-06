@@ -1,14 +1,25 @@
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from fastapi.templating import Jinja2Templates
-from fastapi import status
+from fastapi import status, HTTPException
 from fastapi.responses import JSONResponse
 from datetime import timedelta
 
-from app.auth.schema import CreateUserModel, UserLoginModel, TokenModel, PasswordResetRequestModel
+from app.auth.schema import (
+    CreateUserModel,
+    UserLoginModel,
+    TokenModel,
+    PasswordResetRequestModel,
+    PasswordResetConfirm,
+)
 from app.config import Config
 from app.db.model import User
-from app.error import EmailAlreadyExist, UsernameAlreadyExist, UseNotFound, IncorrectEmailOrPassword
+from app.error import (
+    EmailAlreadyExist,
+    UsernameAlreadyExist,
+    UseNotFound,
+    IncorrectEmailOrPassword,
+)
 from app.utility.security import (
     encode_url_safe_token,
     get_hashed_password,
@@ -105,7 +116,7 @@ class UserService:
                 access_token = create_access_token(
                     user_data={
                         "email": user.email,
-                        "user_id": str(user.id), #string type is required
+                        "user_id": str(user.id),  # string type is required
                         "role": user.role,
                     },
                     expire_delta=timedelta(Config.ACCESS_TOKEN_EXPIRE_MINUTES),
@@ -115,18 +126,22 @@ class UserService:
                 refresh_token = create_access_token(
                     user_data={
                         "email": user.email,
-                        "user_id": str(user.id), #string type is required
+                        "user_id": str(user.id),  # string type is required
                         "role": user.role,
                     },
                     refresh=True,
-                    expire_delta=timedelta(days=Config.REFRESH_TOKEN_EXPIRE_DAYS)
+                    expire_delta=timedelta(days=Config.REFRESH_TOKEN_EXPIRE_DAYS),
                 )
 
-                return TokenModel(access_token=access_token, refresh_token=refresh_token)
+                return TokenModel(
+                    access_token=access_token, refresh_token=refresh_token
+                )
 
         raise IncorrectEmailOrPassword()
 
-    async def password_reset_request(self, email: PasswordResetRequestModel, session: AsyncSession):
+    async def password_reset_request(
+        self, email: PasswordResetRequestModel, session: AsyncSession
+    ):
         email = email.email
         user = await self.get_user_by_field("email", email, session)
         if user is None:
@@ -141,5 +156,39 @@ class UserService:
         send_email.delay(emails, subject, html_message)
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"message": "Please check your email for instructions to reset your password"}
+            content={
+                "message": "Please check your email for instructions to reset your password"
+            },
+        )
+
+    async def reset_account_password(
+        self, token: str, password: PasswordResetConfirm, session: AsyncSession
+    ):
+        new_password = password.new_password
+        confirm_new_password = password.confirm_new_password
+
+        if new_password != confirm_new_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Password not match"
+            )
+
+        token_data = decode_url_safe_token(token)
+
+        user_email = token_data.get("email")
+
+        if user_email:
+            user = await self.get_user_by_field("email", user_email, session)
+            if not user:
+                raise UseNotFound()
+            hashed_password = get_hashed_password(new_password)
+            await self.update_user(user, {"hashed_password": hashed_password}, session)
+
+            return JSONResponse(
+                content={"message": "Password reset successfully"},
+                status_code=status.HTTP_200_OK,
+            )
+
+        return JSONResponse(
+            content={"message": "Error occurred during password reset."},
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

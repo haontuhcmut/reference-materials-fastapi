@@ -4,7 +4,8 @@ from datetime import datetime
 from fastapi.responses import JSONResponse
 
 
-from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel, UserModel, AccessTokenModel, PasswordResetRequestModel
+from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel, UserModel, AccessTokenModel, \
+    PasswordResetRequestModel, PasswordResetConfirm
 from app.db.dependency import SessionDep
 from app.auth.service import UserService
 from app.auth.denpendency import get_current_user, RefreshTokenBearer, AccessTokenBearer
@@ -61,3 +62,11 @@ async def password_reset_request(email: PasswordResetRequestModel, session: Sess
     user_to_reset_password = await user_service.password_reset_request(email, session)
     return user_to_reset_password
 
+@oauth_route.post("/reset-password-confirm/{token}")
+async def reset_account_password(
+    token: str,
+    password: PasswordResetConfirm,
+    session: SessionDep
+):
+    user_to_reset_password = await user_service.reset_account_password(token, password, session)
+    return user_to_reset_password
