@@ -1,10 +1,12 @@
 from fastapi import APIRouter, status, Depends
 from typing import Annotated
+from datetime import datetime
 
-from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel, UserModel
+from app.auth.schema import CreateUserModel, TokenModel, UserLoginModel, UserModel, AccessTokenModel, AccessTokenModel
 from app.db.dependency import SessionDep
 from app.auth.service import UserService
 from app.auth.denpendency import get_current_user, RefreshTokenBearer
+from app.utility.security import create_access_token
 
 
 user_service = UserService()
@@ -35,4 +37,10 @@ async def user_login(login_data: UserLoginModel, session: SessionDep):
 async def get_current_user(user: Annotated[UserModel, Depends(get_current_user)]):
     return user
 
+@oauth_route.get("/refresh_token")
+async def get_new_access_token(token_details: Annotated[dict, Depends(RefreshTokenBearer())]):
+    exp_time = token_details["exp"]
 
+    if datetime.fromtimestamp(exp_time) > datetime.now():
+        new_access_token = create_access_token(token_details["user"])
+        return AccessTokenModel(access_token=new_access_token)
