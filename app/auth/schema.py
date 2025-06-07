@@ -12,13 +12,22 @@ class UserLoginModel(BaseModel):
     email: str = Field(max_length=32)
     password: str = Field(max_length=32)
 
-class TokenModel(BaseModel):
+class AccessTokenModel(BaseModel):
     access_token: str
-    refresh_token: str
     token_type: str = "bearer"
+
+class TokenModel(AccessTokenModel):
+    refresh_token: str
 
 class UserModel(BaseModel):
     username: str
     last_name: str
     first_name: str
     role: str
+
+class PasswordResetRequestModel(BaseModel):
+    email: str
+
+class PasswordResetConfirm(BaseModel):
+    new_password: str = Field(max_length=32)
+    confirm_new_password: str = Field(max_length=32)
