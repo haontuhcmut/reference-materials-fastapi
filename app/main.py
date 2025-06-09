@@ -1,3 +1,5 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi_pagination import add_pagination
 from app.error import register_all_errors

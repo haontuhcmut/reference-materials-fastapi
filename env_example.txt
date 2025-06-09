@@ -1,3 +1,19 @@
 DATABASE_URL= "mysql+aiomysql://user:password@domain:3306/name_db"
+TEST_DATABASE_URL= "mysql+aiomysql://user:password@domain:3306/name_db"
 DOMAIN=""
-VERSION="api/v1"
+VERSION=""
+SECRET_KEY=""
+SALT=""
+ALGORITHM=""
+ACCESS_TOKEN_EXPIRE_MINUTES=
+JTI_EXPIRY_SECOND=
+REFRESH_TOKEN_EXPIRE_DAYS=
+
+MAIL_USERNAME=""
+MAIL_PASSWORD=""
+MAIL_FROM=""
+MAIL_SERVER=""
+
+BROKER_URL=""
+BACKEND_URL=""
+
