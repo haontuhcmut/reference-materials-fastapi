@@ -6,6 +6,7 @@ env_path = base_dir / ".env"
 
 class Settings(BaseSettings):
     DATABASE_URL: str
+    TESTING_DATABASE_URL: str
     DOMAIN: str
     VERSION: str
     SECRET_KEY: str
