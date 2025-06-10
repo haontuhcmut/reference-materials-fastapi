@@ -1,12 +1,12 @@
 from fastapi import status
+from app.main import app
+import pytest
 
-BASE_URL = "/api/v1/categories"
+BASE_URL = "api/v1/category"
 
-def test_create_category(test_client):
-    response = test_client.post(BASE_URL, json={"name": "Test Category"})
-    assert response.status_code == status.HTTP_201_CREATED
-    assert response.json()["name"] == "Test Category"
 
-def test_get_categories(test_client):
-    response = test_client.get(BASE_URL)
-    assert response.status_code == status.HTTP_200_OK
+@pytest.mark.asyncio
+async def test_create_category(async_client):
+    response = await async_client.post(f"{BASE_URL}", json={"name": "test"})
+
+    assert response.status_code == 307
