@@ -12,10 +12,10 @@ from app.error import BomNotFound
 bom_service = BomService()
 bom_route = APIRouter()
 
-@bom_route.get("/", response_model= Page[BomModelResponse])
-async def get_all_bom(_params: Annotated[Params, Depends()], session: SessionDep):
-    bom = await bom_service.get_all_bom(session)
-    return paginate(bom)
+@bom_route.get("/", response_model=Page[BomModelResponse])
+async def get_all_bom(params: Annotated[Params, Depends()], session: SessionDep):
+    bom = await bom_service.get_all_bom(session=session, params=params)
+    return bom
 
 @bom_route.get("/{bom_id}", response_model=BomModelResponse)
 async def get_bom_item(bom_id: str, session: SessionDep):
