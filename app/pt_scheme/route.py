@@ -1,21 +1,22 @@
 from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
-from fastapi_pagination import Page, Params, paginate
+from fastapi_pagination import Page, Params
 from typing import Annotated
 
 from app.pt_scheme.service import PTSchemeService
 from app.error import PTSChemeNotFound
 from app.db.dependency import SessionDep
 from app.pt_scheme.schema import CreatePTSchemeModel, PTSchemeWithCategoryModel
+from app.db.model import PTScheme
 
 pt_scheme_service = PTSchemeService()
 pt_scheme_route = APIRouter()
 
 
-@pt_scheme_route.get("/", response_model=Page[PTSchemeWithCategoryModel])
+@pt_scheme_route.get("/", response_model=Page[PTScheme])
 async def get_all_scheme(_params: Annotated[Params, Depends()], session: SessionDep):
     results = await pt_scheme_service.get_all_pt_scheme(session)
-    return paginate(results)
+    return results
 
 @pt_scheme_route.get("/{scheme_id}", response_model=PTSchemeWithCategoryModel)
 async def get_scheme_item(scheme_id: str, session: SessionDep):

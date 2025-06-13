@@ -2,21 +2,22 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
-from fastapi_pagination import Page, Params, paginate
+from fastapi_pagination import Page, Params
 
 from app.product.schema import CreateProductModel, ProductModelResponse
 from app.product.service import ProductService
 from app.error import ProductNotFound
 from app.db.dependency import SessionDep
+from app.db.model import Product
 
 product_service = ProductService()
 product_route = APIRouter()
 
 
-@product_route.get("/", response_model=Page[ProductModelResponse])
+@product_route.get("/", response_model=Page[Product])
 async def get_all_product(_params: Annotated[Params, Depends()], session: SessionDep):
     products = await product_service.get_all_product(session)
-    return paginate(products)
+    return products
 
 
 @product_route.get("/{product_id}")

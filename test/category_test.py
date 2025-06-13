@@ -51,71 +51,58 @@ async def test_get_all_categories(async_client):
 @pytest.mark.asyncio
 async def test_create_category_duplicate(async_client):
     """Test error when creating category with dupicate name"""
-    #Try to create duplicate
+    # Try to create duplicate
     response = await async_client.post(f"{BASE_URL}/", json=category_data)
-    assert response.status_code
-    
-
-# @pytest.mark.asyncio
-# async def test_create_category_duplicate(async_client):
-#     """Test error when creating category with duplicate name"""
-#     # First create
-#     await async_client.post(f"{BASE_URL}/", json=category_data)
-
-#     # Try to create duplicate
-#     response = await async_client.post(f"{BASE_URL}/", json=category_data)
-#     assert response.status_code == status.HTTP_400_BAD_REQUEST
-#     assert response.json() == {
-#         "message": "Category name already exist",
-#         "error_code": "category_name_already_exist",
-#     }
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "message": "Category name already exist",
+        "error_code": "category_name_already_exist",
+    }
 
 
-# @pytest.mark.asyncio
-# async def test_create_category_invalid_payload(async_client):
-#     """Test error when creating category with invalid payload"""
-#     response = await async_client.post(f"{BASE_URL}/", json=[])
-#     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-#     assert (
-#         response.json()["detail"][0]["msg"]
-#         == "Input should be a valid dictionary or object to extract fields from"
-#     )
+@pytest.mark.asyncio
+async def test_cretegory_invalid_payload(async_client):
+    """Test error when creating category with invalid payload"""
+    response = await async_client.post(f"{BASE_URL}/", json=[])
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    assert (
+        response.json()["detail"][0]["msg"]
+        == "Input should be a valid dictionary or object to extract fields from"
+    )
 
 
-# # Error cases - Read
-# @pytest.mark.asyncio
-# async def test_get_category_invalid_uuid(async_client):
-#     """Test error when getting category with invalid UUID format"""
-#     response = await async_client.get(f"{BASE_URL}/{invalid_uuid}")
-#     assert response.status_code == status.HTTP_400_BAD_REQUEST
-#     assert response.json() == {
-#         "message": "Invalid ID format",
-#         "error_code": "invalid_id_format",
-#     }
+# Error cases - Read
+@pytest.mark.asyncio
+async def test_get_category_invalid_uuid(async_client):
+    """Test error when getting category with invalid UUID format"""
+    response = await async_client.get(f"{BASE_URL}/{invalid_uuid}")
+    assert response.status_code == status.HTTP_400_BAD_REQUEST
+    assert response.json() == {
+        "message": "Invalid ID format",
+        "error_code": "invalid_id_format",
+    }
 
+@pytest.mark.asyncio
+async def test_get_category_not_found(async_client):
+    """Assuming a category id '2619D907-AD69-43D0-89E5-D45EADF6F94B' does not exist"""
+    response = await async_client.get(f"{BASE_URL}/{non_existent_uuid}")
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {
+        "message": "Category not found",
+        "error_code": "category_not_found"
+    }
 
-# @pytest.mark.asyncio
-# async def test_get_category_not_found(async_client):
-#     """Assuming a category id '2619D907-AD69-43D0-89E5-D45EADF6F94B' does not exist"""
-#     response = await async_client.get(f"{BASE_URL}/{non_existent_uuid}")
-#     assert response.status_code == status.HTTP_404_NOT_FOUND
-#     assert response.json() == {
-#         "message": "Category not found",
-#         "error_code": "category_not_found",
-#     }
+@pytest.mark.asyncio
+async def test_get_all_categories_invalid_pagination(async_client):
+    """Test errpr when getting categories with invalid pagination parameter"""
+    #Test invalid page number
+    response = await async_client.get(f"{BASE_URL}/", params={"page":0, "size": 10})
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
+    #Test invalid page size
+    response = await async_client.get(f"{"BASE_URL"}/", params={"page":1, "size": 0})
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
 
-# @pytest.mark.asyncio
-# async def test_get_all_categories_invalid_pagination(async_client):
-#     """Test error when getting categories with invalid pagination parameters"""
-#     # Test invalid page number
-#     response = await async_client.get(f"{BASE_URL}/", params={"page": 0, "size": 10})
-#     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-#     # Test invalid page size
-#     response = await async_client.get(f"{BASE_URL}/", params={"page": 1, "size": 0})
-#     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
-#     # Test negative values
-#     response = await async_client.get(f"{BASE_URL}/", params={"page": -1, "size": -10})
-#     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
+    #Test negative value
+    response = await async_client.get(f"{BASE_URL}/", params={"page": -1, "size": -10})
+    assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
