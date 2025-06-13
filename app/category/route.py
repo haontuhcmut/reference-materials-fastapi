@@ -1,8 +1,9 @@
 from fastapi import APIRouter, status, Depends
 from fastapi.responses import JSONResponse
-from fastapi_pagination import Page, Params, paginate
+from fastapi_pagination import Page, Params
 from typing import Annotated
 
+from app.db.model import Category
 from app.db.dependency import SessionDep
 from app.category.service import CategoryService
 from app.category.schema import CategoryModel, CreateCategoryModel
@@ -16,7 +17,7 @@ category_route = APIRouter()
 @category_route.get("/", response_model=Page[CategoryModel])
 async def get_all_category(session: SessionDep, _params: Annotated[Params, Depends()]):
     categories = await category_service.get_all_category(session)
-    return paginate(categories)
+    return categories
 
 
 @category_route.get("/{category_id}", response_model=CategoryModel)

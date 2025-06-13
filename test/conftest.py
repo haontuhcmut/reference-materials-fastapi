@@ -1,26 +1,32 @@
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
 from app.config import Config
+from fastapi_pagination import add_pagination
 
 from app.db.session import get_session
 from app.main import app
 
 async_engine = create_async_engine(
     url=Config.TESTING_DATABASE_URL,
-    echo=False,
     poolclass=NullPool,
+)
+
+async_session = sessionmaker(
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
+    bind=async_engine,
+    class_=AsyncSession,
 )
 
 
 # Drop all tables after each test
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope="session")
 async def async_db_engine():
     async with async_engine.begin() as conn:
         await conn.run_sync(SQLModel.metadata.create_all)
@@ -33,19 +39,12 @@ async def async_db_engine():
 
 @pytest_asyncio.fixture(scope="function")
 async def async_db(async_db_engine):
-    async_session = async_sessionmaker(
-        expire_on_commit=False,
-        autocommit=False,
-        autoflush=False,
-        bind=async_db_engine,
-        class_=AsyncSession,
-    )
-
     async with async_session() as session:
         await session.begin()
 
         yield session
 
+        # Rollback any database changes made during the test to maintain test isolation
         await session.rollback()
 
 
@@ -55,4 +54,5 @@ async def async_client(async_db):
         yield async_db
 
     app.dependency_overrides[get_session] = override_get_db
+    add_pagination(app)  # Pagination is registered
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost")
