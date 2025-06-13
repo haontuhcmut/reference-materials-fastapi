@@ -1,10 +1,8 @@
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import (
-    AsyncSession,
-    async_sessionmaker,
-    create_async_engine,
-)
+from sqlmodel.ext.asyncio.session import AsyncSession
+from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
 from app.config import Config
@@ -12,10 +10,21 @@ from app.config import Config
 from app.db.session import get_session
 from app.main import app
 
+# IMPORTANT: Ensure TESTING_DATABASE_URL is properly configured in Config
+# This should point to a separate test database, NOT the production database
+# Example: postgresql+asyncpg://user:pass@localhost:5432/test_db
 async_engine = create_async_engine(
     url=Config.TESTING_DATABASE_URL,
-    echo=False,
-    poolclass=NullPool,
+    poolclass=NullPool,  # Disable connection pooling for tests to ensure clean state
+)
+
+# Session Configuration
+AsyncSessionLocalTest = sessionmaker(
+    expire_on_commit=False,
+    autocommit=False,
+    autoflush=False,
+    bind=async_engine,
+    class_=AsyncSession,
 )
 
 
@@ -33,20 +42,12 @@ async def async_db_engine():
 
 @pytest_asyncio.fixture(scope="function")
 async def async_db(async_db_engine):
-    async_session = async_sessionmaker(
-        expire_on_commit=False,
-        autocommit=False,
-        autoflush=False,
-        bind=async_db_engine,
-        class_=AsyncSession,
-    )
+    async with AsyncSessionLocalTest() as session:
+        await session.begin()  # Start a new transaction
 
-    async with async_session() as session:
-        await session.begin()
+        yield session  # Give the session to the test
 
-        yield session
-
-        await session.rollback()
+        await session.rollback()  # Undo all changes after test
 
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
