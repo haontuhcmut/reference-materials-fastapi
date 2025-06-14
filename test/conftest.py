@@ -7,6 +7,9 @@ from sqlalchemy.pool import NullPool
 from sqlmodel import SQLModel
 from app.config import Config
 from fastapi_pagination import add_pagination
+from unittest.mock import AsyncMock
+from app.db.redis import add_jti_blocklist
+
 
 from app.db.session import get_session
 from app.main import app
@@ -47,12 +50,24 @@ async def async_db(async_db_engine):
         # Rollback any database changes made during the test to maintain test isolation
         await session.rollback()
 
+@pytest_asyncio.fixture(scope="function")
+def fake_redis():
+    mock_redis = AsyncMock()
+    mock_redis.set.return_value = True
+    mock_redis.get.return_value = b""
+    return mock_redis
+
+@pytest_asyncio.fixture(autouse=True)
+async def override_redis(fake_redis):
+    app.dependency_overrides[add_jti_blocklist] = lambda: fake_redis
+    yield
+    app.dependency_overrides.pop(add_jti_blocklist, None)
 
 @pytest_asyncio.fixture(scope="function", autouse=True)
 async def async_client(async_db):
     def override_get_db():
-        yield async_db
-
+        yield async_db      
+    
     app.dependency_overrides[get_session] = override_get_db
     add_pagination(app)  # Pagination is registered
     return AsyncClient(transport=ASGITransport(app=app), base_url="http://localhost")

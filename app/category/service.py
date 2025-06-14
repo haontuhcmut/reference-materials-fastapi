@@ -64,6 +64,7 @@ class CategoryService:
             ).first()
             if existing_category:
                 raise CategoryAlreadyExist()
+            
         for key, value in data_update.model_dump(exclude_unset=True).items():
             setattr(category, key, value)
         await session.commit()
