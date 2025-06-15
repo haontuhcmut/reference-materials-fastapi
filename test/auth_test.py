@@ -4,6 +4,8 @@ from fastapi import status
 from urllib.parse import unquote
 import re
 
+import httpx
+
 BASE_URL = "/api/v1/oauth"
 
 fake_user_data = dict(
@@ -54,7 +56,7 @@ async def test_signup(mock_send_email, async_client):
 
 # @patch("app.main.auth.user_service")
 @pytest.mark.asyncio
-async def test_login_and_get_me(async_client, fake_redis):
+async def test_login_and_get_me(async_client):
     response = await async_client.post(f"{BASE_URL}/login", json=login_data)
     assert response.status_code == status.HTTP_200_OK
     assert response.json().get("token_type") == "bearer"
@@ -64,10 +66,4 @@ async def test_login_and_get_me(async_client, fake_redis):
     response = await async_client.get(
         f"{BASE_URL}/me", headers={"Authorization": f"Bearer {access_token}"}
     )
-
     assert response.status_code == status.HTTP_200_OK
-    # user_data = response.json()
-    # assert user_data["email"] == fake_user_data["email"]
-    # assert user_data["username"] == fake_user_data["username"]
-    # assert user_data["first_name"] == fake_user_data["first_name"]
-    # assert user_data["last_name"] == fake_user_data["last_name"]
