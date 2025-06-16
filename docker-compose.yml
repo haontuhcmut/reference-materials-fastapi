@@ -1,0 +1,43 @@
+services:
+  fastapi:
+    build: .
+    container_name: reference-managerment-fastapi
+    volumes:
+      - .:/app
+
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      TESTING_DATABASE_URL: ${TESTING_DATABASE_URL}
+      DOMAIN: ${DOMAIN}
+      VERSION: ${VERSION}
+      SECRET_KEY: ${SECRET_KEY}
+      SALT: ${SALT}
+      ALGORITHM: ${ALGORITHM}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
+      JTI_EXPIRY_SECOND: ${JTI_EXPIRY_SECOND}
+      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
+      MAIL_FROM: ${MAIL_FROM}
+      MAIL_SERVER: ${MAIL_SERVER}
+
+    ports:
+      - "8000:8000"
+    networks:
+      - app-networks
+  celery:
+    build: .
+    container_name: celery-worker
+    command: celery -A app.celery_task.c_app worker -l info
+    volumes:
+      - .:/app
+    environment:
+      REDIS_URL: ${REDIS_URL}
+    depends_on: []
+
+    networks:
+      - app-networks
+
+networks:
+  app-networks:
+    driver: bridge
