@@ -1,43 +1,85 @@
 services:
+  db:
+    image: mysql:9.3
+    container_name: mysql-container
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    
+    volumes:
+      - db_data:/var/lib/mysql
+    
+    ports:
+      - "3306:3306"
+    
+    networks:
+      - app-networks
+  
+  redis:
+    image: redis:8.0.2-alpine
+    container_name: redis-container
+    command: ["redis-server", "--appendonly", "yes"] #Turn on AOF persistence
+    volumes:
+      - redis_data:/data
+    
+    ports:
+      - "6379:6379"
+    
+    networks:
+      - app-networks  
+  
   fastapi:
     build: .
-    container_name: reference-managerment-fastapi
+    container_name: reference-management-fastapi
+    depends_on:
+      - db
+      - redis
     volumes:
       - .:/app
-
-    environment:
-      DATABASE_URL: ${DATABASE_URL}
-      TESTING_DATABASE_URL: ${TESTING_DATABASE_URL}
-      DOMAIN: ${DOMAIN}
-      VERSION: ${VERSION}
-      SECRET_KEY: ${SECRET_KEY}
-      SALT: ${SALT}
-      ALGORITHM: ${ALGORITHM}
-      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES}
-      JTI_EXPIRY_SECOND: ${JTI_EXPIRY_SECOND}
-      REFRESH_TOKEN_EXPIRE_DAYS: ${REFRESH_TOKEN_EXPIRE_DAYS}
-      MAIL_USERNAME: ${MAIL_USERNAME}
-      MAIL_PASSWORD: ${MAIL_PASSWORD}
-      MAIL_FROM: ${MAIL_FROM}
-      MAIL_SERVER: ${MAIL_SERVER}
-
+    env_file:
+      - .env
     ports:
       - "8000:8000"
     networks:
       - app-networks
-  celery:
+  celery-worker:
     build: .
-    container_name: celery-worker
+    container_name: celery-worker-container
+    depends_on:
+      - redis
     command: celery -A app.celery_task.c_app worker -l info
     volumes:
       - .:/app
     environment:
       REDIS_URL: ${REDIS_URL}
-    depends_on: []
+    networks:
+      - app-networks
+
+  celery-flower:
+    build: .
+    container_name: celery-flower-container
+    depends_on:
+      - redis
+      - celery-worker
+    command: celery -A app.celery_task.c_app flower --port=5555 --address=0.0.0.0
+    environment:
+      REDIS_URL: ${REDIS_URL}
+    volumes:
+      - .:/app
+    
+    ports:
+      - "5555:5555"
 
     networks:
       - app-networks
 
+
 networks:
   app-networks:
     driver: bridge
+
+volumes:
+  db_data:
+  redis_data:
