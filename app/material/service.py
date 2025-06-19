@@ -2,8 +2,10 @@ from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
+from fastapi_pagination.ext.sqlmodel import apaginate
+from fastapi_pagination import Page
 
-from app.db.model import Material, BillOfMaterial, Inventory, Product
+from app.db.model import Material, BillOfMaterial
 from app.material.schema import (
     CreateMaterialModel,
     BillOfMaterialBase,
@@ -13,11 +15,9 @@ from app.error import InvalidIDFormat, MaterialNotFound, MaterialAlreadyExist
 
 
 class MaterialService:
-    async def get_all_material(self, session: AsyncSession):
+    async def get_all_material(self, session: AsyncSession) -> Page[Material]:
         statement = select(Material).order_by(Material.name)
-        results = await session.exec(statement)
-        materials = results.all()
-        return materials
+        return await apaginate(session, statement)
 
     async def get_material_item(self, material_id: str, session: AsyncSession):
         try:
@@ -94,7 +94,9 @@ class MaterialService:
             return None
 
         if material_to_update.material_code != data_update.material_code:
-            statement = select(Material).where(Material.material_code == data_update.material_code)
+            statement = select(Material).where(
+                Material.material_code == data_update.material_code
+            )
             result = await session.exec(statement)
             existing_material = result.first()
             if existing_material:

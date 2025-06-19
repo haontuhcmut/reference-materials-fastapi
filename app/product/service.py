@@ -3,12 +3,13 @@ from uuid import UUID
 from sqlalchemy.orm import selectinload
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, desc
+from fastapi_pagination.ext.sqlmodel import apaginate
+from fastapi_pagination import Page
 from uuid import UUID
 
 from app.db.model import Product, PTScheme, BillOfMaterial
 from app.product.schema import (
     CreateProductModel,
-    ProductModelResponse,
     ProductItemDetailResponse,
 )
 from app.error import (
@@ -20,24 +21,9 @@ from app.error import (
 
 
 class ProductService:
-    async def get_all_product(self, session: AsyncSession):
-        statement = (
-            select(Product)
-            .options(selectinload(Product.pt_scheme))
-            .order_by(desc(Product.created_at))
-        )
-        results = await session.exec(statement)
-        products = results.all()
-        product_response = [
-            ProductModelResponse(
-                **product.model_dump(),
-                pt_scheme_code=product.pt_scheme.pt_scheme_code,
-                analytes=product.pt_scheme.analytes,
-                pt_name=product.pt_scheme.name,
-            )
-            for product in products
-        ]
-        return product_response
+    async def get_all_product(self, session: AsyncSession) -> Page[Product]:
+        statement = select(Product).order_by(desc(Product.created_at))
+        return await apaginate(session, statement)
 
     async def get_product_item(self, product_id: str, session: AsyncSession):
         try:

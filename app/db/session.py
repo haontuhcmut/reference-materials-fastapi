@@ -10,8 +10,12 @@ engine = create_async_engine(url=database_url, future=True)
 AsyncSessionLocal = sessionmaker(
     bind=engine,
     class_=AsyncSession,
-    expire_on_commit=False, # ⚠️ Objects will NOT be automatically refreshed after commit!
+    expire_on_commit=False,  # ⚠️ Objects will NOT be automatically refreshed after commit!
 )
+
+
 async def get_session() -> AsyncSession:
     async with AsyncSessionLocal() as session:
         yield session
+
+        await session.rollback()

@@ -1,21 +1,23 @@
-from itertools import product
 from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select, desc
 from sqlalchemy.orm import selectinload
+from fastapi_pagination.ext.sqlmodel import apaginate
+from fastapi_pagination import Page, Params
+from typing import Annotated
+from fastapi import Depends
 
 from app.db.model import BillOfMaterial, Product, Material
 from app.bom.schema import (
     CreateBomModel,
     BomModelResponse,
-    MaterialBase,
     BomDetailModelResponse,
 )
 from app.error import ProductNotFound, MaterialNotFound, InvalidIDFormat, BomNotFound
 
 
 class BomService:
-    async def get_all_bom(self, session: AsyncSession):
+    async def get_all_bom(self, params: Params, session: AsyncSession):
         statement = (
             select(BillOfMaterial)
             .options(
@@ -24,20 +26,29 @@ class BomService:
             )
             .join(BillOfMaterial.product)
             .order_by(desc(Product.created_at))  # Order by Product's created_at
+            .offset(params.to_raw_params().offset)
+            .limit(params.to_raw_params().limit)
         )
-        results = await session.exec(statement)
-        bom = results.all()
-        data_response = [
+
+        result = await session.exec(statement)
+        bom_items = result.all()
+
+        items = [
             BomModelResponse(
                 id=bom_item.id,
-                product_id=bom_item.product.id,
-                product_code=bom_item.product.product_code,
-                material_id=bom_item.material.id,
-                material_code=bom_item.material.material_code,
+                product_id=bom_item.product.id if bom_item.product else None,
+                product_code=(
+                    bom_item.product.product_code if bom_item.product else None
+                ),
+                material_id=bom_item.material.id if bom_item.material else None,
+                material_code=(
+                    bom_item.material.material_code if bom_item.material else None
+                ),
             )
-            for bom_item in bom
+            for bom_item in bom_items
         ] or []
-        return data_response
+
+        return Page.create(total=len(bom_items), items=items, params=params)
 
     async def get_bom_item(self, bom_id: str, session: AsyncSession):
         try:
@@ -126,7 +137,6 @@ class BomService:
             setattr(bom_to_update, key, value)
         await session.commit()
         return bom_to_update
-
 
     async def delete_bom(self, bom_id: str, session: AsyncSession):
         try:
