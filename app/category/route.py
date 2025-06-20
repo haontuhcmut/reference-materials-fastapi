@@ -3,11 +3,12 @@ from fastapi.responses import JSONResponse
 from fastapi_pagination import Page, Params
 from typing import Annotated
 
-from app.db.model import Category
 from app.db.dependency import SessionDep
 from app.category.service import CategoryService
-from app.category.schema import CategoryModel, CreateCategoryModel
+from app.category.schema import CategoryModel, CreateCategoryModel, CategoryFilter
 from app.error import CategoryNotFound
+
+from fastapi_filter import FilterDepends
 
 
 category_service = CategoryService()
@@ -57,3 +58,12 @@ async def category_delete(category_id: str, session: SessionDep):
         status_code=status.HTTP_200_OK,
         content={"message": "The category is deleted successfully"},
     )
+
+
+@category_route.get("/filter/")
+async def get_category_filter(
+    category_filter: Annotated[CategoryFilter, FilterDepends(CategoryFilter)],
+    session: SessionDep,
+):
+    category = await category_service.category_filter(category_filter, session)
+    return category

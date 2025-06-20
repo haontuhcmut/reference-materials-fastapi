@@ -4,9 +4,12 @@ from sqlmodel import select
 from fastapi_pagination.ext.sqlmodel import apaginate
 from fastapi_pagination import Page
 
-from app.category.schema import CreateCategoryModel
+from app.category.schema import CreateCategoryModel, CategoryFilter
 from app.db.model import Category
 from app.error import CategoryAlreadyExist, InvalidIDFormat, CategoryNotFound
+
+from fastapi_filter import FilterDepends
+from typing import Annotated
 
 
 class CategoryService:
@@ -64,7 +67,7 @@ class CategoryService:
             ).first()
             if existing_category:
                 raise CategoryAlreadyExist()
-            
+
         for key, value in data_update.model_dump(exclude_unset=True).items():
             setattr(category, key, value)
         await session.commit()
@@ -77,3 +80,15 @@ class CategoryService:
             await session.commit()
             return category_to_delete
         return None
+
+    async def category_filter(
+        self,
+        category_filter: Annotated[CategoryFilter, FilterDepends(CategoryFilter)],
+        session: AsyncSession,
+    ):
+        statement = select(Category)
+        statement = category_filter.filter(statement)
+        statement = category_filter.sort(statement)
+        result = await session.exec(statement)
+        category = result.first()
+        return category
