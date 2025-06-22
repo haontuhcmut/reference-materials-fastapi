@@ -63,7 +63,7 @@ async def category_delete(category_id: str, session: SessionDep):
 @category_route.get("/filter/")
 async def get_category_filter(
     category_filter: Annotated[CategoryFilter, FilterDepends(CategoryFilter)],
+    _params: Annotated[Params, Depends()],
     session: SessionDep,
 ):
-    category = await category_service.category_filter(category_filter, session)
-    return category
+    return await category_service.category_filter(category_filter, session, _params)

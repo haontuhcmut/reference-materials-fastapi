@@ -2,6 +2,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field
 from fastapi_filter.contrib.sqlalchemy import Filter
 from app.db.model import Category
+from pydantic import field_validator
 
 
 class CreateCategoryModel(BaseModel):
@@ -13,13 +14,11 @@ class CategoryModel(CreateCategoryModel):
 
 
 class CategoryFilter(Filter):
-    name: str | None = None
-    name__ilike: str | None = None
-    name_like: str | None = None
-    name__neq: str | None = None
 
-    search: str | None = None
+    sort: list[str] | None = None
 
     class Constants(Filter.Constants):
         model = Category
-        search_model_fields = ["name"]
+        # The name of the query parameter used for sorting in the API.
+        # Change this value to customize the sort parameter in your endpoints.
+        ordering_field_name = "sort"

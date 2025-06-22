@@ -2,10 +2,11 @@ from uuid import UUID
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from fastapi_pagination.ext.sqlmodel import apaginate
-from fastapi_pagination import Page
+from fastapi_pagination import Page, Params
+from fastapi import Depends
 
 from app.category.schema import CreateCategoryModel, CategoryFilter
-from app.db.model import Category
+from app.db.model import Category, PTScheme
 from app.error import CategoryAlreadyExist, InvalidIDFormat, CategoryNotFound
 
 from fastapi_filter import FilterDepends
@@ -85,10 +86,9 @@ class CategoryService:
         self,
         category_filter: Annotated[CategoryFilter, FilterDepends(CategoryFilter)],
         session: AsyncSession,
-    ):
+        _params: Annotated[Params, Depends()],
+    ) -> Page[Category]:
         statement = select(Category)
-        statement = category_filter.filter(statement)
-        statement = category_filter.sort(statement)
-        result = await session.exec(statement)
-        category = result.first()
-        return category
+        filtered_query = category_filter.filter(statement)
+        sorted_query = category_filter.sort(filtered_query)
+        return await apaginate(session, sorted_query, _params)
