@@ -90,5 +90,4 @@ class CategoryService:
     ) -> Page[Category]:
         statement = select(Category)
         filtered_query = category_filter.filter(statement)
-        sorted_query = category_filter.sort(filtered_query)
-        return await apaginate(session, sorted_query, _params)
+        return await apaginate(session, filtered_query, _params)

@@ -3,9 +3,14 @@ from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
 from fastapi_pagination.ext.sqlmodel import apaginate
 from fastapi_pagination import Page
+from typing import Annotated
+from fastapi_filter import FilterDepends
+from fastapi_pagination import Params
+from fastapi import Depends
+from fastapi_pagination.ext.sqlmodel import apaginate
 
 from app.db.model import PTScheme, Category
-from app.pt_scheme.schema import CreatePTSchemeModel
+from app.pt_scheme.schema import CreatePTSchemeModel, PTSchemesFilter
 from app.error import (
     PTSchemeAlreadyExist,
     InvalidIDFormat,
@@ -104,3 +109,13 @@ class PTSchemeService:
             await session.commit()
             return scheme_to_delete
         return None
+
+    async def pt_schemes_filter(
+        self,
+        pt_schemes_filter: Annotated[PTSchemesFilter, FilterDepends(PTSchemesFilter)],
+        _params: Annotated[Params, Depends()],
+        session: AsyncSession,
+    ) -> Page[PTScheme]:
+        statement = select(PTScheme).join(Category.name)
+        filter_query = pt_schemes_filter.filter(statement)
+        return await apaginate(session, filter_query, _params)  
