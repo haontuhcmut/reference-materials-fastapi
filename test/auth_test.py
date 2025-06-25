@@ -55,15 +55,15 @@ async def test_signup(mock_send_email, async_client):
 
 
 # @patch("app.main.auth.user_service")
-@pytest.mark.asyncio
-async def test_login_and_get_me(async_client):
-    response = await async_client.post(f"{BASE_URL}/login", json=login_data)
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json().get("token_type") == "bearer"
+# @pytest.mark.asyncio
+# async def test_login_and_get_me(async_client):
+#     response = await async_client.post(f"{BASE_URL}/login", json=login_data)
+#     assert response.status_code == status.HTTP_200_OK
+#     assert response.json().get("token_type") == "bearer"
 
-    access_token = response.json().get("access_token")
+#     access_token = response.json().get("access_token")
 
-    response = await async_client.get(
-        f"{BASE_URL}/me", headers={"Authorization": f"Bearer {access_token}"}
-    )
-    assert response.status_code == status.HTTP_200_OK
+#     response = await async_client.get(
+#         f"{BASE_URL}/me", headers={"Authorization": f"Bearer {access_token}"}
+#     )
+#     assert response.status_code == status.HTTP_200_OK

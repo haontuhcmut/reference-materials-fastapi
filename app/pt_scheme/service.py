@@ -112,10 +112,11 @@ class PTSchemeService:
 
     async def pt_schemes_filter(
         self,
-        pt_schemes_filter: Annotated[PTSchemesFilter, FilterDepends(PTSchemesFilter)],
-        _params: Annotated[Params, Depends()],
+        filter: Annotated[PTSchemesFilter, FilterDepends(PTSchemesFilter)],
+        params: Annotated[Params, Depends()],
         session: AsyncSession,
     ) -> Page[PTScheme]:
-        statement = select(PTScheme).join(Category.name)
-        filter_query = pt_schemes_filter.filter(statement)
-        return await apaginate(session, filter_query, _params)  
+        statement = select(PTScheme).join(Category)
+        query = filter.filter(statement)
+        query = filter.sort(query)
+        return await apaginate(session, query, params)

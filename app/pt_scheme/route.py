@@ -73,12 +73,12 @@ async def delete_scheme(scheme_id: str, session: SessionDep):
 
 @pt_scheme_route.get("/filter/", response_model=Page[PTScheme])
 async def pt_scheme_filter(
-    pt_scheme_filter: Annotated[PTSchemesFilter, FilterDepends(PTSchemesFilter)],
-    _params: Annotated[Params, Depends()],
+    filter: Annotated[PTSchemesFilter, FilterDepends(PTSchemesFilter)],
+    params: Annotated[Params, Depends()],
     session: SessionDep
 ):
-    filter_query = await pt_scheme_service.pt_schemes_filter(
-        pt_scheme_filter, _params, session
+    result = await pt_scheme_service.pt_schemes_filter(
+        filter, params, session
     )
-    return filter_query
+    return result
 

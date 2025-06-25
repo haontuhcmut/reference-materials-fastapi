@@ -59,6 +59,12 @@ async def test_get_all_categories(async_client):
     assert data["size"] == 10
 
 
+@pytest.mark.asyncio
+async def test_order_by(async_client):
+    response = await async_client.get(f"{BASE_URL}/", params={"order_by": "-name"})
+    assert response.status_code == status.HTTP_200_OK
+
+
 # Error cases - Create
 @pytest.mark.asyncio
 async def test_create_category_duplicate(async_client):
@@ -124,7 +130,6 @@ async def test_get_all_categories_invalid_pagination(async_client):
     # Test negative value
     response = await async_client.get(f"{BASE_URL}/", params={"page": -1, "size": -10})
     assert response.status_code == status.HTTP_422_UNPROCESSABLE_ENTITY
-
 
 # Error cases - Update
 @pytest.mark.asyncio

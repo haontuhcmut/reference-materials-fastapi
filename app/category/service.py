@@ -89,5 +89,6 @@ class CategoryService:
         _params: Annotated[Params, Depends()],
     ) -> Page[Category]:
         statement = select(Category)
-        filtered_query = category_filter.filter(statement)
-        return await apaginate(session, filtered_query, _params)
+        query = category_filter.filter(statement)
+        query = category_filter.sort(query) #If using order_by
+        return await apaginate(session, query, _params)

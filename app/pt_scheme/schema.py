@@ -34,7 +34,7 @@ class CategoryFilter(Filter):
     name__ilike: str | None = None
 
     class Constants(Filter.Constants):
-        model: Category
+        model = Category
 
 class PTSchemesFilter(Filter):
     name__ilike: str | None = None
@@ -47,10 +47,11 @@ class PTSchemesFilter(Filter):
         with_prefix("category", CategoryFilter)
     )
 
-    # search: str | None = Field(
-    #     Query(description="Search by scheme code, name and analytic")
-    # )
+    order_by: list[str] | None = None
+    search: str | None = Field(
+        Query(description="Search by scheme code, name and analytic")
+    )
 
     class Constants(Filter.Constants):
         model = PTScheme
-        # search_model_fields = ["name", "pt_scheme_code", "analytes"]
+        search_model_fields = ["name", "pt_scheme_code", "analytes"]
