@@ -90,6 +90,11 @@ class WarehouseNotFound(ExceptionRegister):
 
     pass
 
+class InvalidFileExtension(ExceptionRegister):
+    """Invalid file extension"""
+
+    pass
+
 
 def create_exception_handler(
     status_code: int, detail: Any
@@ -259,6 +264,17 @@ def register_all_errors(app: FastAPI):
             detail={
                 "message": "Warehouse not found",
                 "error_code": "warehouse_not_found",
+            },
+        ),
+    )
+
+    app.add_exception_handler(
+        InvalidFileExtension,
+        create_exception_handler(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "message": "Invalid file extension",
+                "error_code": "invalid_file_extension",
             },
         ),
     )
